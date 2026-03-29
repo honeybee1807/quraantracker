@@ -60,13 +60,13 @@ button {
   padding: 0.8rem 1rem;
   border-radius: 25px;
   border: none;
-  background: #4CAF50; /* consistent green for action buttons */
+  background: #F2C6CF; /* consistent green for action buttons */
   color: white;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
-button:hover { background: #45a049; }
+button:hover { background: #F2C6CF; }
 
 .circle-btn {
   border-radius: 50%;
