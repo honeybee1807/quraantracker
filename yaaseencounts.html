@@ -3,24 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <title>Yaaseen Counter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>📖 QuraanTracker</header>
+  <header>
+    <i class="fas fa-bars"></i>
+    <span class="site-name">quraantracker</span>
+    <div class="header-icons">
+      <i class="fas fa-circle-question"></i>
+      <i class="fas fa-user-circle"></i>
+    </div>
+  </header>
 
   <h1>Surah Yaaseen Counter</h1>
   <p class="subtitle">Log and track your Yaaseen recitations individually or in groups.</p>
 
   <section class="light-blue">
-    <input type="text" placeholder="Enter description...">
-    <input type="number" placeholder="Target count...">
-    <button style="font-size:1.2rem; border-radius:50px;">+1 Recitation</button>
+        <input type="text" placeholder="Enter description…">
+    <input type="number" placeholder="Target count…">
+    <button onclick="incrementYaaseen()" style="font-size:1.2rem; border-radius:50px;">+1 Recitation</button>
     <p>Current Count: <span id="count">0</span></p>
     <p>Group Total: <span id="groupTotal">0</span></p>
   </section>
 
   <footer>
-    For the pleasure of Allah, By Olideen Technologies
-  </footer>
+    <p>For the pleasure of Allah, By Olideen Technologies</p>
+    <nav>
+      <a href="#">Terms</a> • <a href="#">Disclaimer</a> • <a href="#">Privacy</a>
+    </nav>
+  </footer>\
+  <script src="script.js"></script>
+
 </body>
 </html>

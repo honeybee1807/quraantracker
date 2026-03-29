@@ -3,38 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <title>QuraanTracker - Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>📖 QuraanTracker</header>
+  <header>
+    <i class="fas fa-bars"></i>
+    <span class="site-name">quraantracker</span>
+    <div class="header-icons">
+      <i class="fas fa-circle-question"></i>
+      <i class="fas fa-user-circle"></i>
+    </div>
+  </header>
 
   <section class="light-purple">
-    <h2>Khatm Coordination</h2>
-    <input type="text" placeholder="Enter Khatm description...">
-    <input type="text" placeholder="Assign Juz/Para...">
-    <button>Save</button>
+    <h2>Coordinating a Khatm with others or for yourself?</h2>
+    <p class="subtitle">Easily organize and manage Quraan reading in a group or by yourself, no messy messages to keep track of.</p>
+    <input type="text" placeholder="Enter Khatm details…">
+    <button class="circle-btn"><i class="fas fa-arrow-right"></i></button>
   </section>
 
   <section class="light-green">
-    <h2>Dhikr / Dua / Salawat Tracker</h2>
-    <input type="text" placeholder="Enter description...">
-    <input type="number" placeholder="Target count...">
-    <button>Save</button>
+    <h2>Tracking your Dhikr, Dua, Salawat counts?</h2>
+    <p class="subtitle">Keep track of your personal or group Dhikr, Dua, and Salawat counts in one place.</p>
+    <input type="text" placeholder="Enter descriptions…">
+    <input type="number" placeholder="Target count…">
+    <button class="circle-btn"><i class="fas fa-arrow-right"></i></button>
   </section>
 
-  <section class="peach">
-    <h2>Quick Tools</h2>
-    <div>
-      <button onclick="location.href='Zikr.html'">Tasbeeh Counter</button>
-      <button>Ramadan Tracker</button>
+  <section class="quick-tools">
+    <div class="card peach">
+      <h3>Tasbeeh Counter</h3>
+      <p class="subtitle">Tap to count your dhikr — no login needed.</p>
+      <button>Start Counting</button>
+    </div>
+    <div class="card light-blue">
+      <h3>Ramadan Tracker</h3>
+      <p class="subtitle">Log and monitor your Ramadan worship and deeds.</p>
+      <button>Begin Tracking</button>
     </div>
   </section>
 
   <footer>
-    For the pleasure of Allah, By Olideen Technologies <br>
-    <a href="Khatam.html">Khatm Tracker</a> | 
-    <a href="YaaseenCounts.html">Yaaseen Counter</a> | 
-    <a href="Zikr.html">Dhikr Tracker</a>
+    <p>For the pleasure of Allah, By Olideen Technologies</p>
+    <nav>
+      <a href="#">Terms</a> • <a href="#">Disclaimer</a> • <a href="#">Privacy</a>
+    </nav>
   </footer>
+  <script src="script.js"></script>
 </body>
 </html>

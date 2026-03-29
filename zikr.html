@@ -3,24 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <title>Dhikr Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>📖 QuraanTracker</header>
+  <header>
+    <i class="fas fa-bars"></i>
+    <span class="site-name">quraantracker</span>
+    <div class="header-icons">
+      <i class="fas fa-circle-question"></i>
+      <i class="fas fa-user-circle"></i>
+    </div>
+  </header>
 
   <h1>Daily Dhikr Tracker</h1>
   <p class="subtitle">Tap to count your dhikr and track totals.</p>
 
   <section class="peach">
-    <button style="font-size:1.5rem; border-radius:50px;">Tap to Count</button>
+    <button onclick="incrementDhikr()" style="font-size:1.5rem; border-radius:50px;">Tap to Count</button>
     <p>Session Count: <span id="sessionCount">0</span></p>
     <p>Total Saved: <span id="savedTotal">0</span></p>
-    <input type="number" placeholder="Set target count...">
-    <button>Save Progress</button>
+    <input type="number" placeholder="Set target count…">
+    <button onclick="saveDhikr()">Save Progress</button>
   </section>
 
   <footer>
-    For the pleasure of Allah, By Olideen Technologies
+    <p>For the pleasure of Allah, By Olideen Technologies</p>
+    <nav>
+      <a href="#">Terms</a> • <a href="#">Disclaimer</a> • <a href="#">Privacy</a>
+    </nav>
   </footer>
+  <script src="script.js"></script>
+
 </body>
 </html>
