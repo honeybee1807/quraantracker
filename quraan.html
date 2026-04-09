@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quraan Khatm — My Quraan Tracker</title>
+  <title>Quraan Khatam — My Quraan Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
@@ -11,7 +11,7 @@
 
   <header class="app-header">
     <button class="header-btn" onclick="openDrawer()"><i class="fas fa-bars"></i></button>
-    <a href="index.html" class="header-logo"><img src="myquraantracker logo.png" alt="My Quraan Tracker"></a>
+    <a href="index.html" class="header-logo"><img src="MQT_logo.png" alt="My Quraan Tracker"></a>
     <button class="header-btn"><i class="fas fa-user-circle"></i></button>
   </header>
 
@@ -23,7 +23,7 @@
     </div>
     <div class="drawer-nav">
       <a href="index.html"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
-      <a href="quraan.html" class="active"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
+      <a href="quraan.html" class="active"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatam</a>
       <a href="zikr.html"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
       <a href="yaaseencounts.html"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
     </div>
@@ -33,38 +33,38 @@
   <!-- PAGE HERO -->
   <div class="page-hero">
     <div class="page-hero-arabic">وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</div>
-    <h1>Quraan Khatm</h1>
+    <h1>Quraan Khatam</h1>
     <p>Organise para allocations for your group</p>
   </div>
 
   <!-- FORM: Create / Join (shown when no code) -->
-  <div id="khatmFormSection" class="page-body" style="display:none">
+  <div id="KhatamFormSection" class="page-body" style="display:none">
     <div class="card fade-up">
       <div class="card-stripe"></div>
       <div class="card-body">
         <div class="card-icon-row">
           <div class="card-icon teal"><i class="fas fa-plus-circle"></i></div>
-          <div class="card-title">Start a New Khatm</div>
+          <div class="card-title">Start a New Khatam</div>
         </div>
-        <p class="card-desc">Give your Khatm a name — for example "For Nani" or "Ramadan 2026" — then share the code with your group.</p>
-        <input type="text" id="khatmDescPage" class="field" placeholder="Name / intention…">
-        <button class="btn btn-primary" onclick="createKhatmFromPage()"><i class="fas fa-plus"></i> Create Khatm</button>
+        <p class="card-desc">Give your Khatam a name — for example "For Nani" or "Ramadan 2026" — then share the code with your group.</p>
+        <input type="text" id="KhatamDescPage" class="field" placeholder="Name / intention…">
+        <button class="btn btn-primary" onclick="createKhatamFromPage()"><i class="fas fa-plus"></i> Create Khatam</button>
         <div class="or-line">already have a code?</div>
         <div class="join-row">
           <input type="text" id="joinCodePage" class="field" placeholder="Enter code…" style="text-transform:uppercase;letter-spacing:0.1em;">
-          <button class="btn btn-outline btn-sm" onclick="joinKhatmFromPage()">Join</button>
+          <button class="btn btn-outline btn-sm" onclick="joinKhatamFromPage()">Join</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- KHATM VIEW (shown when code exists) -->
-  <div id="khatmView" class="page-body" style="display:none">
+  <!-- Khatam VIEW (shown when code exists) -->
+  <div id="KhatamView" class="page-body" style="display:none">
 
     <!-- Complete Banner -->
-    <div id="khatmComplete" class="success-banner fade-up" style="display:none">
+    <div id="KhatamComplete" class="success-banner fade-up" style="display:none">
       <div class="arabic">اَلْحَمْدُ لِلَّه</div>
-      <h3>Khatm Complete! 🤲</h3>
+      <h3>Khatam Complete! 🤲</h3>
       <p>May Allah accept it from everyone. Ameen.</p>
     </div>
 
@@ -72,17 +72,17 @@
     <div class="share-box fade-up">
       <div>
         <div style="font-size:0.7rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Share Code</div>
-        <div class="share-code" id="khatmCodeDisplay">------</div>
+        <div class="share-code" id="KhatamCodeDisplay">------</div>
       </div>
       <button class="copy-btn" onclick="doCopy()">Copy</button>
     </div>
 
-    <!-- Khatm Title -->
+    <!-- Khatam Title -->
     <div class="card fade-up">
       <div class="card-stripe"></div>
       <div class="card-body" style="padding:1rem 1.4rem;">
-        <div style="font-size:0.7rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;">Khatm For</div>
-        <div id="khatmTitle" style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--teal);margin:0.2rem 0 0.75rem;"></div>
+        <div style="font-size:0.7rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;">Khatam For</div>
+        <div id="KhatamTitle" style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--teal);margin:0.2rem 0 0.75rem;"></div>
         <div class="progress-wrap">
           <div class="progress-fill" id="progressFill" style="width:0%"></div>
         </div>
@@ -109,7 +109,7 @@
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="index.html"><i class="fas fa-home"></i> Home</a>
-    <a href="quraan.html" class="active"><i class="fas fa-book-open"></i> Khatm</a>
+    <a href="quraan.html" class="active"><i class="fas fa-book-open"></i> Khatam</a>
     <a href="zikr.html"><i class="fas fa-infinity"></i> Zikr</a>
     <a href="yaaseencounts.html"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
   </nav>
@@ -120,13 +120,13 @@
     function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
 
     function doCopy() {
-      const code = document.getElementById('khatmCodeDisplay').textContent;
+      const code = document.getElementById('KhatamCodeDisplay').textContent;
       navigator.clipboard.writeText(code);
       const btn = document.querySelector('.copy-btn');
       btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = 'Copy', 1800);
     }
 
-    window.addEventListener('DOMContentLoaded', initKhatmPage);
+    window.addEventListener('DOMContentLoaded', initKhatamPage);
   </script>
 </body>
 </html>

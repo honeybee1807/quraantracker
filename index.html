@@ -12,7 +12,7 @@
   <!-- HEADER -->
   <header class="app-header">
     <button class="header-btn" onclick="openDrawer()"><i class="fas fa-bars"></i></button>
-    <a href="index.html" class="header-logo"><img src="myquraantracker logo.png" alt="My Quraan Tracker"></a>
+    <a href="index.html" class="header-logo"><img src="MQT_logo.png" alt="My Quraan Tracker"></a>
     <button class="header-btn"><i class="fas fa-user-circle"></i></button>
   </header>
 
@@ -25,7 +25,7 @@
     </div>
     <div class="drawer-nav">
       <a href="index.html" class="active"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
-      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
+      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatam</a>
       <a href="zikr.html"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
       <a href="yaaseencounts.html"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
     </div>
@@ -36,30 +36,30 @@
   <div class="hero-banner fade-up">
     <div class="hero-arabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
     <h1 class="hero-title">My <em>Quraan</em> Tracker</h1>
-    <p class="hero-sub">Track your Khatm, count your Zikr, and worship together — simply.</p>
+    <p class="hero-sub">Track your Khatam, count your Zikr, and worship together — simply.</p>
   </div>
 
   <!-- MAIN CONTENT -->
   <div class="page-body">
 
-    <!-- KHATM CARD -->
-    <div class="section-label">Quraan Khatm</div>
+    <!-- Khatam CARD -->
+    <div class="section-label">Quraan Khatam</div>
     <div class="card fade-up">
       <div class="card-stripe"></div>
       <div class="card-body">
         <div class="card-icon-row">
           <div class="card-icon teal"><i class="fas fa-book-quran"></i></div>
           <div>
-            <div class="card-title">Start or Join a Khatm</div>
+            <div class="card-title">Start or Join a Khatam</div>
           </div>
         </div>
-        <p class="card-desc">Completing a Quraan Khatm with your family or community? Create one, share the code, and everyone can claim and complete their paras together.</p>
-        <input type="text" id="khatmDesc" class="field" placeholder="Name your Khatm (e.g. For Dadi)…">
-        <button class="btn btn-primary" onclick="createKhatm()"><i class="fas fa-plus"></i> Create Khatm</button>
+        <p class="card-desc">Completing a Quraan Khatam with your family or community? Create one, share the code, and everyone can claim and complete their paras together.</p>
+        <input type="text" id="KhatamDesc" class="field" placeholder="Name your Khatam (e.g. Esale Sawaab for Marhooms)…">
+        <button class="btn btn-primary" onclick="createKhatam()"><i class="fas fa-plus"></i> Create Khatam</button>
         <div class="or-line">or join one</div>
         <div class="join-row">
           <input type="text" id="joinCode" class="field" placeholder="Enter code…" style="text-transform:uppercase;letter-spacing:0.1em;">
-          <button class="btn btn-outline btn-sm" onclick="joinKhatm()">Join</button>
+          <button class="btn btn-outline btn-sm" onclick="joinKhatam()">Join</button>
         </div>
       </div>
     </div>
@@ -114,10 +114,10 @@
       </div>
     </div>
 
-    <!-- MY KHATMS -->
-    <div id="myKhatmsSection" style="display:none">
-      <div class="section-label">My Khatms</div>
-      <div id="myKhatmsList"></div>
+    <!-- MY KhatamS -->
+    <div id="myKhatamsSection" style="display:none">
+      <div class="section-label">My Khatams</div>
+      <div id="myKhatamsList"></div>
     </div>
 
   </div>
@@ -125,7 +125,7 @@
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="index.html" class="active"><i class="fas fa-home"></i> Home</a>
-    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatm</a>
+    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatam</a>
     <a href="zikr.html"><i class="fas fa-infinity"></i> Zikr</a>
     <a href="yaaseencounts.html"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
   </nav>
@@ -137,23 +137,23 @@
 
     function generateCode() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
 
-    function createKhatm() {
-      const desc = document.getElementById('khatmDesc').value.trim();
-      if (!desc) { alert('Please enter a name for your Khatm.'); return; }
+    function createKhatam() {
+      const desc = document.getElementById('KhatamDesc').value.trim();
+      if (!desc) { alert('Please enter a name for your Khatam.'); return; }
       const code = generateCode();
-      const khatm = { code, description: desc, createdAt: new Date().toISOString(),
+      const Khatam = { code, description: desc, createdAt: new Date().toISOString(),
         paras: Array.from({length:30}, (_,i) => ({ number: i+1, assignedTo:'', completed: false })) };
-      const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-      all.push(khatm);
-      localStorage.setItem('mqt_khatms', JSON.stringify(all));
+      const all = JSON.parse(localStorage.getItem('mqt_Khatams') || '[]');
+      all.push(Khatam);
+      localStorage.setItem('mqt_Khatams', JSON.stringify(all));
       window.location.href = 'quraan.html?code=' + code;
     }
 
-    function joinKhatm() {
+    function joinKhatam() {
       const code = document.getElementById('joinCode').value.trim().toUpperCase();
       if (!code) { alert('Please enter a code.'); return; }
-      const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-      if (!all.find(k => k.code === code)) { alert('Khatm not found. Double check the code.'); return; }
+      const all = JSON.parse(localStorage.getItem('mqt_Khatams') || '[]');
+      if (!all.find(k => k.code === code)) { alert('Khatam not found. Double check the code.'); return; }
       window.location.href = 'quraan.html?code=' + code;
     }
 
@@ -177,23 +177,23 @@
       window.location.href = 'zikr.html?code=' + code;
     }
 
-    // Load my khatms
+    // Load my Khatams
     window.addEventListener('DOMContentLoaded', () => {
-      const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+      const all = JSON.parse(localStorage.getItem('mqt_Khatams') || '[]');
       if (!all.length) return;
-      document.getElementById('myKhatmsSection').style.display = 'block';
-      const list = document.getElementById('myKhatmsList');
+      document.getElementById('myKhatamsSection').style.display = 'block';
+      const list = document.getElementById('myKhatamsList');
       list.innerHTML = all.map(k => {
         const done = k.paras.filter(p => p.completed).length;
         const pct = Math.round((done/30)*100);
-        return `<a href="quraan.html?code=${k.code}" class="khatm-row">
-          <div class="khatm-row-icon"><i class="fas fa-book-quran"></i></div>
-          <div class="khatm-row-info">
-            <div class="khatm-row-name">${k.description}</div>
-            <div class="khatm-row-meta">Code: ${k.code} &bull; ${done}/30 paras</div>
+        return `<a href="quraan.html?code=${k.code}" class="Khatam-row">
+          <div class="Khatam-row-icon"><i class="fas fa-book-quran"></i></div>
+          <div class="Khatam-row-info">
+            <div class="Khatam-row-name">${k.description}</div>
+            <div class="Khatam-row-meta">Code: ${k.code} &bull; ${done}/30 paras</div>
             <div class="progress-wrap" style="margin-top:0.4rem;height:6px;"><div class="progress-fill" style="width:${pct}%"></div></div>
           </div>
-          <div class="khatm-row-pct">${pct}%</div>
+          <div class="Khatam-row-pct">${pct}%</div>
         </a>`;
       }).join('');
     });

@@ -354,24 +354,24 @@ body::after {
   border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
 }
 
-/* ── KHATM LIST ROWS ── */
-.khatm-row {
+/* ── Khatam LIST ROWS ── */
+.Khatam-row {
   display: flex; align-items: center; gap: 0.9rem;
   padding: 1rem; background: var(--white); border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm); margin-bottom: 0.75rem;
   text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent;
   transition: transform 0.15s;
 }
-.khatm-row:active { transform: scale(0.97); }
-.khatm-row-icon {
+.Khatam-row:active { transform: scale(0.97); }
+.Khatam-row-icon {
   width: 46px; height: 46px; border-radius: 13px;
   background: var(--teal-soft); display: flex; align-items: center;
   justify-content: center; font-size: 1.2rem; color: var(--teal); flex-shrink: 0;
 }
-.khatm-row-info { flex: 1; min-width: 0; }
-.khatm-row-name { font-weight: 700; color: var(--text); font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.khatm-row-meta { font-size: 0.72rem; color: var(--text-soft); margin-top: 0.12rem; }
-.khatm-row-pct  { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--teal); flex-shrink: 0; }
+.Khatam-row-info { flex: 1; min-width: 0; }
+.Khatam-row-name { font-weight: 700; color: var(--text); font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.Khatam-row-meta { font-size: 0.72rem; color: var(--text-soft); margin-top: 0.12rem; }
+.Khatam-row-pct  { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--teal); flex-shrink: 0; }
 
 /* ── ALERT ── */
 .alert {
