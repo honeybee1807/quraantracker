@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quraan Khatam — My Quraan Tracker</title>
+  <title>Quraan Khatm — My Quraan Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
@@ -11,8 +11,8 @@
 
   <header class="app-header">
     <button class="header-btn" onclick="openDrawer()"><i class="fas fa-bars"></i></button>
-    <a href="index.html" class="header-logo"><img src="MQT_logo.png" alt="My Quraan Tracker"></a>
-    <button class="header-btn"><i class="fas fa-user-circle"></i></button>
+    <a href="index.html" class="header-logo"><img src="myquraantracker_logo.png" alt="My Quraan Tracker"></a>
+    <a href="index.html" class="header-btn"><i class="fas fa-home"></i></a>
   </header>
 
   <div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
@@ -23,66 +23,52 @@
     </div>
     <div class="drawer-nav">
       <a href="index.html"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
-      <a href="quraan.html" class="active"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatam</a>
+      <a href="quraan.html" class="active"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
       <a href="zikr.html"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
       <a href="yaaseencounts.html"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
     </div>
     <div class="drawer-footer">For the pleasure of Allah<br>By Olideen Technologies</div>
   </nav>
 
-  <!-- PAGE HERO -->
   <div class="page-hero">
     <div class="page-hero-arabic">وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</div>
-    <h1>Quraan Khatam</h1>
+    <h1>Quraan Khatm</h1>
     <p>Organise para allocations for your group</p>
   </div>
 
-  <!-- FORM: Create / Join (shown when no code) -->
-  <div id="KhatamFormSection" class="page-body" style="display:none">
+  <!-- CREATE / OPEN FORM -->
+  <div id="khatmFormSection" class="page-body" style="display:none">
     <div class="card fade-up">
       <div class="card-stripe"></div>
       <div class="card-body">
         <div class="card-icon-row">
           <div class="card-icon teal"><i class="fas fa-plus-circle"></i></div>
-          <div class="card-title">Start a New Khatam</div>
+          <div class="card-title">Start a New Khatm</div>
         </div>
-        <p class="card-desc">Give your Khatam a name — for example "For Nani" or "Ramadan 2026" — then share the code with your group.</p>
-        <input type="text" id="KhatamDescPage" class="field" placeholder="Name / intention…">
-        <button class="btn btn-primary" onclick="createKhatamFromPage()"><i class="fas fa-plus"></i> Create Khatam</button>
-        <div class="or-line">already have a code?</div>
-        <div class="join-row">
-          <input type="text" id="joinCodePage" class="field" placeholder="Enter code…" style="text-transform:uppercase;letter-spacing:0.1em;">
-          <button class="btn btn-outline btn-sm" onclick="joinKhatamFromPage()">Join</button>
-        </div>
+        <p class="card-desc">Give your Khatm a name, then share it on WhatsApp. Your family opens the link and claims their paras — no codes to type.</p>
+        <input type="text" id="khatmDescPage" class="field" placeholder="Name / intention (e.g. For Nani)…">
+        <button class="btn btn-primary" onclick="createKhatmFromPage()"><i class="fas fa-plus"></i> Create & Share</button>
       </div>
     </div>
   </div>
 
-  <!-- Khatam VIEW (shown when code exists) -->
-  <div id="KhatamView" class="page-body" style="display:none">
+  <!-- KHATM VIEW -->
+  <div id="khatmView" class="page-body" style="display:none">
 
     <!-- Complete Banner -->
-    <div id="KhatamComplete" class="success-banner fade-up" style="display:none">
+    <div id="khatmComplete" class="success-banner fade-up" style="display:none">
       <div class="arabic">اَلْحَمْدُ لِلَّه</div>
-      <h3>Khatam Complete! 🤲</h3>
+      <h3>Khatm Complete! 🤲</h3>
       <p>May Allah accept it from everyone. Ameen.</p>
     </div>
 
-    <!-- Share Code -->
-    <div class="share-box fade-up">
-      <div>
-        <div style="font-size:0.7rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Share Code</div>
-        <div class="share-code" id="KhatamCodeDisplay">------</div>
-      </div>
-      <button class="copy-btn" onclick="doCopy()">Copy</button>
-    </div>
-
-    <!-- Khatam Title -->
+    <!-- Khatm info + share -->
     <div class="card fade-up">
       <div class="card-stripe"></div>
-      <div class="card-body" style="padding:1rem 1.4rem;">
-        <div style="font-size:0.7rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;">Khatam For</div>
-        <div id="KhatamTitle" style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--teal);margin:0.2rem 0 0.75rem;"></div>
+      <div class="card-body">
+        <div style="font-size:0.68rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Khatm For</div>
+        <div id="khatmTitle" style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--teal);margin-bottom:0.85rem;"></div>
+
         <div class="progress-wrap">
           <div class="progress-fill" id="progressFill" style="width:0%"></div>
         </div>
@@ -90,43 +76,51 @@
           <span id="progressText">0 of 30 paras done</span>
           <span id="progressPct">0%</span>
         </div>
+
+        <!-- WhatsApp share -->
+        <div style="display:flex;gap:0.6rem;margin-top:1rem;">
+          <button class="btn btn-primary" style="flex:1;background:#25D366;" onclick="shareKhatmWhatsApp()">
+            <i class="fab fa-whatsapp"></i> Share on WhatsApp
+          </button>
+          <button id="copyLinkBtn" class="btn btn-ghost btn-sm" onclick="copyKhatmLink()" style="flex-shrink:0;">
+            Copy Link
+          </button>
+        </div>
+        <p style="font-size:0.73rem;color:var(--text-soft);margin-top:0.5rem;text-align:center;">
+          After updating the Khatm, share again so everyone sees the latest version.
+        </p>
       </div>
     </div>
 
-    <!-- Your Name -->
+    <!-- Name input -->
     <div class="alert info">
       <i class="fas fa-circle-info"></i>
-      <span>Enter your name below, then tap a <strong>green para</strong> to claim it. Once you've read it, tap <strong>Mark Done</strong>.</span>
+      <span>Enter your name, then tap a <strong>green para</strong> to claim it. Once done, tap it again to mark complete.</span>
     </div>
-    <input type="text" id="yourName" class="field" placeholder="Your name (to claim a para)…">
+    <input type="text" id="yourName" class="field" placeholder="Your name…">
 
-    <!-- Paras -->
-    <div class="section-label">30 Paras</div>
+    <div class="section-label">30 Paras — tap to claim yours</div>
     <div class="paras-grid" id="parasGrid"></div>
+
+    <!-- Share update button at bottom -->
+    <div style="margin-top:1.5rem;">
+      <button class="btn" style="background:#25D366;color:white;" onclick="shareKhatmWhatsApp()">
+        <i class="fab fa-whatsapp"></i> Share Updated Khatm
+      </button>
+    </div>
 
   </div>
 
-  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="index.html"><i class="fas fa-home"></i> Home</a>
-    <a href="quraan.html" class="active"><i class="fas fa-book-open"></i> Khatam</a>
+    <a href="quraan.html" class="active"><i class="fas fa-book-open"></i> Khatm</a>
     <a href="zikr.html"><i class="fas fa-infinity"></i> Zikr</a>
     <a href="yaaseencounts.html"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
   </nav>
 
   <script src="script.js"></script>
   <script>
-    function openDrawer()  { document.getElementById('drawer').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
-    function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
-
-    function doCopy() {
-      const code = document.getElementById('KhatamCodeDisplay').textContent;
-      navigator.clipboard.writeText(code);
-      const btn = document.querySelector('.copy-btn');
-      btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = 'Copy', 1800);
-    }
-
-    window.addEventListener('DOMContentLoaded', initKhatamPage);
+    window.addEventListener('DOMContentLoaded', initKhatmPage);
   </script>
 </body>
 </html>

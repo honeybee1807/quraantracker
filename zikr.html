@@ -11,8 +11,8 @@
 
   <header class="app-header">
     <button class="header-btn" onclick="openDrawer()"><i class="fas fa-bars"></i></button>
-    <a href="index.html" class="header-logo"><img src="MQT_logo.png" alt="My Quraan Tracker"></a>
-    <button class="header-btn"><i class="fas fa-user-circle"></i></button>
+    <a href="index.html" class="header-logo"><img src="myquraantracker_logo.png" alt="My Quraan Tracker"></a>
+    <a href="index.html" class="header-btn"><i class="fas fa-home"></i></a>
   </header>
 
   <div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
@@ -23,7 +23,7 @@
     </div>
     <div class="drawer-nav">
       <a href="index.html"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
-      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatam</a>
+      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
       <a href="zikr.html" class="active"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
       <a href="yaaseencounts.html"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
     </div>
@@ -33,18 +33,18 @@
   <div class="page-hero">
     <div class="page-hero-arabic">اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا</div>
     <h1>Zikr Counter</h1>
-    <p>Count Durood, Tasbeeh, or any Zikr — alone or with your group</p>
+    <p>Count Durood, Tasbeeh, or any Zikr — alone or as a group</p>
   </div>
 
-  <!-- FORM (create or join) -->
+  <!-- FORM -->
   <div id="zikrFormSection" class="page-body" style="display:none">
 
-    <!-- Quick standalone counter always visible -->
+    <!-- Quick standalone tasbeeh -->
     <div class="card fade-up">
       <div class="card-stripe gold"></div>
       <div class="card-body" style="text-align:center;">
-        <div style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold-dark);margin-bottom:0.25rem;">Quick Tasbeeh</div>
-        <p style="font-size:0.82rem;color:var(--text-soft);margin-bottom:0;">Just tap and count. No setup.</p>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--gold-dark);margin-bottom:0.2rem;">Quick Tasbeeh</div>
+        <p style="font-size:0.8rem;color:var(--text-soft);margin-bottom:0;">Just tap and count — no setup.</p>
         <div class="tap-zone">
           <div class="big-number gold-num" id="standaloneCount">0</div>
           <button class="tap-circle gold-tap" onclick="tapStandalone()">
@@ -69,24 +69,19 @@
       </div>
     </div>
 
-    <!-- Group counter setup -->
+    <!-- Group counter -->
     <div class="section-label">Group Counter</div>
     <div class="card fade-up-2">
       <div class="card-stripe"></div>
       <div class="card-body">
         <div class="card-icon-row">
           <div class="card-icon teal"><i class="fas fa-users"></i></div>
-          <div class="card-title">Count with Others</div>
+          <div class="card-title">Count with Family</div>
         </div>
-        <p class="card-desc">Create a shared counter, invite your family or community, and all contributions add up to your target.</p>
+        <p class="card-desc">Create a shared counter. Share the WhatsApp link with your group — everyone adds their count and the total updates.</p>
         <input type="text" id="zikrDescPage" class="field" placeholder="What are you counting? (e.g. Durood Ibrahim)…">
         <input type="number" id="zikrTargetPage" class="field" placeholder="Target count (e.g. 1000)…">
         <button class="btn btn-primary" onclick="createZikrFromPage()"><i class="fas fa-plus"></i> Create Group Counter</button>
-        <div class="or-line">already have a code?</div>
-        <div class="join-row">
-          <input type="text" id="joinZikrPage" class="field" placeholder="Enter code…" style="text-transform:uppercase;letter-spacing:0.1em;">
-          <button class="btn btn-outline btn-sm" onclick="joinZikrFromPage()">Join</button>
-        </div>
       </div>
     </div>
   </div>
@@ -94,22 +89,11 @@
   <!-- GROUP ZIKR VIEW -->
   <div id="zikrView" class="page-body" style="display:none">
 
-    <!-- Share -->
-    <div class="share-box fade-up">
-      <div>
-        <div style="font-size:0.7rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Share Code</div>
-        <div class="share-code" id="zikrCodeDisplay">------</div>
-      </div>
-      <button class="copy-btn" onclick="doZikrCopy()">Copy</button>
-    </div>
-
-    <!-- Counter card -->
     <div class="card fade-up">
       <div class="card-stripe gold"></div>
-      <div class="card-body" style="text-align:center;">
-        <div id="zikrTitle" style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--gold-dark);margin-bottom:0.5rem;"></div>
+      <div class="card-body">
+        <div id="zikrTitle" style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--gold-dark);margin-bottom:0.6rem;"></div>
 
-        <!-- Progress -->
         <div class="progress-wrap" style="margin-bottom:0.3rem;">
           <div class="progress-fill gold" id="zikrProgressFill" style="width:0%"></div>
         </div>
@@ -129,13 +113,23 @@
 
         <input type="text" id="zikrYourName" class="field" placeholder="Your name…" style="text-align:center;">
         <button class="btn btn-primary" onclick="saveZikrSession()"><i class="fas fa-floppy-disk"></i> Save My Count</button>
+
+        <div style="display:flex;gap:0.6rem;margin-top:0.75rem;">
+          <button class="btn" style="flex:1;background:#25D366;color:white;" onclick="shareZikrWhatsApp()">
+            <i class="fab fa-whatsapp"></i> Share on WhatsApp
+          </button>
+        </div>
+        <p style="font-size:0.73rem;color:var(--text-soft);margin-top:0.5rem;text-align:center;">
+          Share after saving so your family sees your updated count.
+        </p>
       </div>
     </div>
 
-    <!-- Contributions -->
     <div class="card fade-up-2">
       <div class="card-body">
-        <div style="font-weight:700;color:var(--teal);margin-bottom:0.75rem;font-size:0.95rem;"><i class="fas fa-users" style="margin-right:0.4rem;"></i>Contributions</div>
+        <div style="font-weight:700;color:var(--gold-dark);margin-bottom:0.75rem;font-size:0.95rem;">
+          <i class="fas fa-users" style="margin-right:0.4rem;"></i>Contributions
+        </div>
         <div id="zikrContributions">
           <div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No contributions yet — be the first!</p></div>
         </div>
@@ -146,21 +140,13 @@
 
   <nav class="bottom-nav">
     <a href="index.html"><i class="fas fa-home"></i> Home</a>
-    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatam</a>
+    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatm</a>
     <a href="zikr.html" class="active"><i class="fas fa-infinity"></i> Zikr</a>
     <a href="yaaseencounts.html"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
   </nav>
 
   <script src="script.js"></script>
   <script>
-    function openDrawer()  { document.getElementById('drawer').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
-    function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
-    function doZikrCopy() {
-      const code = document.getElementById('zikrCodeDisplay').textContent;
-      navigator.clipboard.writeText(code);
-      const btn = document.querySelector('.copy-btn');
-      btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = 'Copy', 1800);
-    }
     window.addEventListener('DOMContentLoaded', initZikrPage);
   </script>
 </body>

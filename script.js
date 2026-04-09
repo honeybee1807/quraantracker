@@ -1,6 +1,7 @@
 /* =============================================
    MY QURAAN TRACKER — script.js
-   Full functionality: Khatm + Zikr + Yaaseen
+   Sharing: URL-encoded data (no database needed)
+   Works across all phones via WhatsApp links
    ============================================= */
 
 const PARA_NAMES = [
@@ -13,41 +14,130 @@ const PARA_NAMES = [
   "Ha Meem","Qala Fama Khatbukum","Qad Sami Allah","Tabarakallazi","Amma"
 ];
 
-function generateCode() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
-function getParam(n)    { return new URLSearchParams(window.location.search).get(n); }
+// ── HELPERS ──────────────────────────────────
 
-// ─────────────────────────────────────────────
-//  KHATM
-// ─────────────────────────────────────────────
-function initKhatmPage() {
-  const code = getParam('code');
-  if (!code) { document.getElementById('khatmFormSection').style.display = 'block'; return; }
-  const all  = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-  const khatm = all.find(k => k.code === code);
-  if (!khatm) { alert('Khatm not found!'); window.location.href = 'index.html'; return; }
-  document.getElementById('khatmView').style.display = 'block';
-  renderKhatm(khatm);
+function getParam(n) {
+  return new URLSearchParams(window.location.search).get(n);
 }
 
-function saveKhatm(khatm) {
+// Encode khatm object into a URL-safe string
+function encodeKhatm(khatm) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(khatm))));
+}
+
+// Decode khatm from URL string
+function decodeKhatm(str) {
+  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
+  catch(e) { return null; }
+}
+
+// Encode zikr object
+function encodeZikr(zikr) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(zikr))));
+}
+
+function decodeZikr(str) {
+  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
+  catch(e) { return null; }
+}
+
+// Build the shareable WhatsApp link for a khatm
+function buildKhatmShareLink(khatm) {
+  const encoded = encodeKhatm(khatm);
+  const url = `${location.origin}${location.pathname.replace('index.html','').replace(/\/[^/]*$/, '/')  }quraan.html?k=${encoded}`;
+  return url;
+}
+
+function buildZikrShareLink(zikr) {
+  const encoded = encodeZikr(zikr);
+  const url = `${location.origin}${location.pathname.replace('index.html','').replace(/\/[^/]*$/, '/')}zikr.html?z=${encoded}`;
+  return url;
+}
+
+function whatsappShare(text, url) {
+  const msg = encodeURIComponent(`${text}\n\n${url}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+// Save khatm to localStorage (for "My Khatms" list on home)
+function saveKhatmLocal(khatm) {
   const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
   const idx = all.findIndex(k => k.code === khatm.code);
   if (idx >= 0) all[idx] = khatm; else all.push(khatm);
   localStorage.setItem('mqt_khatms', JSON.stringify(all));
 }
 
-function renderKhatm(khatm) {
-  document.getElementById('khatmTitle').textContent       = khatm.description;
-  document.getElementById('khatmCodeDisplay').textContent = khatm.code;
+function generateCode() {
+  return Math.random().toString(36).substring(2,7).toUpperCase();
+}
 
+// ─────────────────────────────────────────────
+//  KHATM PAGE
+// ─────────────────────────────────────────────
+let activeKhatm = null;
+
+function initKhatmPage() {
+  // Check URL for encoded khatm data
+  const kParam = getParam('k');
+  if (kParam) {
+    const khatm = decodeKhatm(kParam);
+    if (!khatm) { showKhatmForm(); return; }
+    activeKhatm = khatm;
+    saveKhatmLocal(khatm); // save locally so it appears in "My Khatms"
+    showKhatmView(khatm);
+    return;
+  }
+  showKhatmForm();
+}
+
+function showKhatmForm() {
+  document.getElementById('khatmFormSection').style.display = 'block';
+  document.getElementById('khatmView').style.display = 'none';
+}
+
+function showKhatmView(khatm) {
+  document.getElementById('khatmFormSection').style.display = 'none';
+  document.getElementById('khatmView').style.display = 'block';
+  renderKhatm(khatm);
+}
+
+function createKhatmFromPage() {
+  const desc = document.getElementById('khatmDescPage').value.trim();
+  if (!desc) { alert('Please enter a name for your Khatm first.'); return; }
+  const khatm = {
+    code: generateCode(),
+    description: desc,
+    createdAt: new Date().toISOString(),
+    paras: Array.from({length: 30}, (_, i) => ({
+      number: i + 1, assignedTo: '', completed: false
+    }))
+  };
+  activeKhatm = khatm;
+  saveKhatmLocal(khatm);
+  // Push to URL so page can be refreshed / shared
+  const encoded = encodeKhatm(khatm);
+  window.history.replaceState({}, '', `quraan.html?k=${encoded}`);
+  showKhatmView(khatm);
+}
+
+function renderKhatm(khatm) {
+  // Title & code
+  document.getElementById('khatmTitle').textContent = khatm.description;
+
+  // Progress
   const done = khatm.paras.filter(p => p.completed).length;
   const pct  = Math.round((done / 30) * 100);
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressText').textContent = done + ' of 30 paras done';
+  document.getElementById('progressText').textContent = `${done} of 30 paras done`;
   document.getElementById('progressPct').textContent  = pct + '%';
 
   if (done === 30) document.getElementById('khatmComplete').style.display = 'block';
 
+  // Update share URL in the URL bar
+  const encoded = encodeKhatm(khatm);
+  window.history.replaceState({}, '', `quraan.html?k=${encoded}`);
+
+  // Paras grid
   const grid = document.getElementById('parasGrid');
   grid.innerHTML = khatm.paras.map(para => {
     if (para.completed) {
@@ -59,123 +149,147 @@ function renderKhatm(khatm) {
       </div>`;
     }
     if (para.assignedTo) {
-      return `<div class="para-tile assigned" onclick="markDone('${khatm.code}',${para.number})">
+      return `<div class="para-tile assigned" onclick="markDone(${para.number})">
         <span class="para-num">${para.number}</span>
         <span class="para-name">${PARA_NAMES[para.number-1]}</span>
         <span class="para-who">${para.assignedTo}</span>
-        <span style="font-size:0.6rem;color:var(--gold-dark);margin-top:0.2rem;display:block;">Tap to mark done</span>
+        <span style="font-size:0.58rem;color:var(--gold-dark);margin-top:0.2rem;display:block;font-weight:700;">Tap → done</span>
       </div>`;
     }
-    return `<div class="para-tile available" onclick="claimPara('${khatm.code}',${para.number})">
+    return `<div class="para-tile available" onclick="claimPara(${para.number})">
       <span class="para-num">${para.number}</span>
       <span class="para-name">${PARA_NAMES[para.number-1]}</span>
-      <span style="font-size:0.6rem;color:var(--teal-mid);margin-top:0.3rem;display:block;font-weight:700;">Tap to claim</span>
+      <span style="font-size:0.58rem;color:var(--teal-mid);margin-top:0.25rem;display:block;font-weight:700;">Tap to claim</span>
     </div>`;
   }).join('');
 }
 
-function claimPara(code, num) {
+function claimPara(num) {
+  if (!activeKhatm) return;
   const name = document.getElementById('yourName').value.trim();
   if (!name) { alert('Please enter your name first!'); document.getElementById('yourName').focus(); return; }
-  const all  = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-  const khatm = all.find(k => k.code === code);
-  if (!khatm) return;
-  const para = khatm.paras.find(p => p.number === num);
+  const para = activeKhatm.paras.find(p => p.number === num);
   if (!para || para.assignedTo) return;
   para.assignedTo = name;
-  saveKhatm(khatm);
-  renderKhatm(khatm);
-  // pop animation
-  const tiles = document.querySelectorAll('.para-tile');
-  tiles[num-1]?.classList.add('pop');
-  setTimeout(() => tiles[num-1]?.classList.remove('pop'), 300);
+  saveKhatmLocal(activeKhatm);
+  renderKhatm(activeKhatm);
 }
 
-function markDone(code, num) {
-  const all  = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-  const khatm = all.find(k => k.code === code);
-  if (!khatm) return;
-  const para = khatm.paras.find(p => p.number === num);
+function markDone(num) {
+  if (!activeKhatm) return;
+  const para = activeKhatm.paras.find(p => p.number === num);
   if (!para) return;
   if (!confirm(`Mark Para ${num} as complete?`)) return;
   para.completed = true;
-  saveKhatm(khatm);
-  renderKhatm(khatm);
+  saveKhatmLocal(activeKhatm);
+  renderKhatm(activeKhatm);
 }
 
-function createKhatmFromPage() {
-  const desc = document.getElementById('khatmDescPage').value.trim();
-  if (!desc) { alert('Please enter a name for your Khatm.'); return; }
-  const code = generateCode();
-  const khatm = {
-    code, description: desc, createdAt: new Date().toISOString(),
-    paras: Array.from({length:30}, (_,i) => ({ number: i+1, assignedTo:'', completed: false }))
-  };
-  saveKhatm(khatm);
-  window.history.replaceState({}, '', 'quraan.html?code=' + code);
-  document.getElementById('khatmFormSection').style.display = 'none';
-  document.getElementById('khatmView').style.display = 'block';
-  renderKhatm(khatm);
+// Share updated Khatm via WhatsApp
+function shareKhatmWhatsApp() {
+  if (!activeKhatm) return;
+  const link = buildKhatmShareLink(activeKhatm);
+  const msg  = `📖 *${activeKhatm.description}* — Quraan Khatm\nJoin us and claim your para:\n`;
+  whatsappShare(msg, link);
 }
 
-function joinKhatmFromPage() {
-  const code = document.getElementById('joinCodePage').value.trim().toUpperCase();
-  if (!code) { alert('Please enter a code.'); return; }
+// Copy the share link to clipboard
+function copyKhatmLink() {
+  if (!activeKhatm) return;
+  const link = buildKhatmShareLink(activeKhatm);
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('copyLinkBtn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy Link', 1800); }
+  });
+}
+
+// ─────────────────────────────────────────────
+//  HOME PAGE — load from URL if khatm in param
+// ─────────────────────────────────────────────
+function initHomePage() {
+  // Load my khatms from localStorage for the "My Khatms" section
   const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-  const found = all.find(k => k.code === code);
-  if (!found) { alert('Khatm not found. Double check the code.'); return; }
-  window.history.replaceState({}, '', 'quraan.html?code=' + code);
-  document.getElementById('khatmFormSection').style.display = 'none';
-  document.getElementById('khatmView').style.display = 'block';
-  renderKhatm(found);
+  const section = document.getElementById('myKhatmsSection');
+  const list    = document.getElementById('myKhatmsList');
+  if (!all.length || !section) return;
+  section.style.display = 'block';
+  list.innerHTML = all.map(k => {
+    const done = k.paras.filter(p => p.completed).length;
+    const pct  = Math.round((done / 30) * 100);
+    const encoded = encodeKhatm(k);
+    return `<a href="quraan.html?k=${encoded}" class="khatm-row">
+      <div class="khatm-row-icon"><i class="fas fa-book-quran"></i></div>
+      <div class="khatm-row-info">
+        <div class="khatm-row-name">${k.description}</div>
+        <div class="khatm-row-meta">${done}/30 paras done</div>
+        <div class="progress-wrap" style="margin-top:0.35rem;height:6px;"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="khatm-row-pct">${pct}%</div>
+    </a>`;
+  }).join('');
 }
 
 // ─────────────────────────────────────────────
-//  ZIKR
+//  ZIKR PAGE
 // ─────────────────────────────────────────────
-let zikrSession = 0;
-let currentZikr = null;
+let zikrSession  = 0;
+let currentZikr  = null;
 let standaloneSession = 0;
 
 function initZikrPage() {
-  const code = getParam('code');
-  if (!code) {
-    document.getElementById('zikrFormSection').style.display = 'block';
-    const saved = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
-    document.getElementById('standaloneSaved').textContent = saved.toLocaleString();
+  const zParam = getParam('z');
+  if (zParam) {
+    const zikr = decodeZikr(zParam);
+    if (!zikr) { showZikrForm(); return; }
+    currentZikr = zikr;
+    document.getElementById('zikrFormSection').style.display = 'none';
+    document.getElementById('zikrView').style.display = 'block';
+    renderZikr(zikr);
     return;
   }
-  const all  = JSON.parse(localStorage.getItem('mqt_zikrs') || '[]');
-  const zikr = all.find(z => z.code === code);
-  if (!zikr) { alert('Counter not found!'); window.location.href = 'index.html'; return; }
+  showZikrForm();
+}
+
+function showZikrForm() {
+  document.getElementById('zikrFormSection').style.display = 'block';
+  document.getElementById('zikrView').style.display = 'none';
+  const saved = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
+  const el = document.getElementById('standaloneSaved');
+  if (el) el.textContent = saved.toLocaleString();
+}
+
+function createZikrFromPage() {
+  const desc   = document.getElementById('zikrDescPage').value.trim();
+  const target = parseInt(document.getElementById('zikrTargetPage').value) || 100;
+  if (!desc) { alert('Please enter what you are counting.'); return; }
+  const zikr = {
+    code: generateCode(), description: desc, target,
+    total: 0, contributions: [], createdAt: new Date().toISOString()
+  };
   currentZikr = zikr;
+  const encoded = encodeZikr(zikr);
+  window.history.replaceState({}, '', `zikr.html?z=${encoded}`);
+  document.getElementById('zikrFormSection').style.display = 'none';
   document.getElementById('zikrView').style.display = 'block';
   renderZikr(zikr);
 }
 
-function saveZikrData(zikr) {
-  const all = JSON.parse(localStorage.getItem('mqt_zikrs') || '[]');
-  const idx = all.findIndex(z => z.code === zikr.code);
-  if (idx >= 0) all[idx] = zikr; else all.push(zikr);
-  localStorage.setItem('mqt_zikrs', JSON.stringify(all));
-}
-
 function renderZikr(zikr) {
-  document.getElementById('zikrTitle').textContent       = zikr.description;
-  document.getElementById('zikrCodeDisplay').textContent = zikr.code;
-  document.getElementById('zikrTotalCount').textContent  = zikr.total.toLocaleString();
+  document.getElementById('zikrTitle').textContent         = zikr.description;
+  document.getElementById('zikrTotalCount').textContent    = zikr.total.toLocaleString();
   document.getElementById('zikrTargetDisplay').textContent = zikr.target.toLocaleString();
   const pct = Math.min(100, Math.round((zikr.total / zikr.target) * 100));
-  document.getElementById('zikrProgressFill').style.width = pct + '%';
-  document.getElementById('zikrProgressPct').textContent  = pct + '%';
+  document.getElementById('zikrProgressFill').style.width  = pct + '%';
+  document.getElementById('zikrProgressPct').textContent   = pct + '%';
   const el = document.getElementById('zikrContributions');
   el.innerHTML = zikr.contributions.length === 0
     ? '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No contributions yet — be the first!</p></div>'
-    : zikr.contributions.map(c => `
-        <div class="contrib-item">
-          <span class="contrib-name">${c.name}</span>
-          <span class="contrib-count">${c.count.toLocaleString()}</span>
-        </div>`).join('');
+    : zikr.contributions.map(c =>
+        `<div class="contrib-item"><span class="contrib-name">${c.name}</span><span class="contrib-count">${c.count.toLocaleString()}</span></div>`
+      ).join('');
+  // update URL with latest data
+  const encoded = encodeZikr(zikr);
+  window.history.replaceState({}, '', `zikr.html?z=${encoded}`);
 }
 
 function tapZikr() {
@@ -192,89 +306,86 @@ function saveZikrSession() {
   currentZikr.total += zikrSession;
   const ex = currentZikr.contributions.find(c => c.name === name);
   if (ex) ex.count += zikrSession; else currentZikr.contributions.push({ name, count: zikrSession });
-  saveZikrData(currentZikr);
   zikrSession = 0;
   document.getElementById('zikrSessionCount').textContent = '0';
   renderZikr(currentZikr);
 }
 
-function createZikrFromPage() {
-  const desc   = document.getElementById('zikrDescPage').value.trim();
-  const target = parseInt(document.getElementById('zikrTargetPage').value) || 100;
-  if (!desc) { alert('Please enter what you are counting.'); return; }
-  const code = generateCode();
-  const zikr = { code, description: desc, target, total: 0, contributions: [], createdAt: new Date().toISOString() };
-  saveZikrData(zikr); currentZikr = zikr;
-  window.history.replaceState({}, '', 'zikr.html?code=' + code);
-  document.getElementById('zikrFormSection').style.display = 'none';
-  document.getElementById('zikrView').style.display = 'block';
-  renderZikr(zikr);
+function shareZikrWhatsApp() {
+  if (!currentZikr) return;
+  const link = buildZikrShareLink(currentZikr);
+  const msg  = `🤲 *${currentZikr.description}* — Zikr Counter\nJoin and add your count:\n`;
+  whatsappShare(msg, link);
 }
 
-function joinZikrFromPage() {
-  const code = document.getElementById('joinZikrPage').value.trim().toUpperCase();
-  if (!code) { alert('Please enter a code.'); return; }
-  const all  = JSON.parse(localStorage.getItem('mqt_zikrs') || '[]');
-  const found = all.find(z => z.code === code);
-  if (!found) { alert('Counter not found. Double check the code.'); return; }
-  currentZikr = found;
-  window.history.replaceState({}, '', 'zikr.html?code=' + code);
-  document.getElementById('zikrFormSection').style.display = 'none';
-  document.getElementById('zikrView').style.display = 'block';
-  renderZikr(found);
-}
-
-// Standalone
+// ── STANDALONE TASBEEH ──
 function tapStandalone() {
   standaloneSession++;
-  document.getElementById('standaloneCount').textContent   = standaloneSession.toLocaleString();
-  document.getElementById('standaloneSession').textContent = standaloneSession.toLocaleString();
   const el = document.getElementById('standaloneCount');
-  el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 250);
+  if (el) { el.textContent = standaloneSession.toLocaleString(); el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 250); }
+  const s = document.getElementById('standaloneSession');
+  if (s) s.textContent = standaloneSession.toLocaleString();
 }
 function saveStandalone() {
-  const saved = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
-  localStorage.setItem('mqt_standalone_total', saved + standaloneSession);
+  const prev = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
+  const newTotal = prev + standaloneSession;
+  localStorage.setItem('mqt_standalone_total', newTotal);
   standaloneSession = 0;
-  document.getElementById('standaloneCount').textContent   = '0';
-  document.getElementById('standaloneSession').textContent = '0';
-  document.getElementById('standaloneSaved').textContent   = (saved + standaloneSession).toLocaleString();
-  // reload to show updated total
-  const t = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
-  document.getElementById('standaloneSaved').textContent = t.toLocaleString();
+  const els = ['standaloneCount','standaloneSession'];
+  els.forEach(id => { const e = document.getElementById(id); if (e) e.textContent = '0'; });
+  const saved = document.getElementById('standaloneSaved');
+  if (saved) saved.textContent = newTotal.toLocaleString();
 }
 function resetStandalone() {
   if (!confirm('Reset all counts?')) return;
   standaloneSession = 0;
   localStorage.removeItem('mqt_standalone_total');
-  ['standaloneCount','standaloneSession','standaloneSaved'].forEach(id => document.getElementById(id).textContent = '0');
+  ['standaloneCount','standaloneSession','standaloneSaved'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.textContent = '0';
+  });
 }
 
 // ─────────────────────────────────────────────
-//  YAASEEN
+//  YAASEEN PAGE
 // ─────────────────────────────────────────────
-let yaaseenSession = 0;
+let yaaseenSession  = 0;
+let currentYaaseen  = null;
 
 function initYaaseenPage() {
-  const code = getParam('code');
-  if (!code) { document.getElementById('yaaseenFormSection').style.display = 'block'; return; }
-  const all = JSON.parse(localStorage.getItem('mqt_yaaseens') || '[]');
-  const y   = all.find(a => a.code === code);
-  if (!y) { alert('Counter not found!'); window.location.href = 'index.html'; return; }
+  const yParam = getParam('y');
+  if (yParam) {
+    try {
+      const y = JSON.parse(decodeURIComponent(escape(atob(yParam))));
+      currentYaaseen = y;
+      document.getElementById('yaaseenFormSection').style.display = 'none';
+      document.getElementById('yaaseenView').style.display = 'block';
+      renderYaaseen(y);
+    } catch(e) { showYaaseenForm(); }
+    return;
+  }
+  showYaaseenForm();
+}
+
+function showYaaseenForm() {
+  document.getElementById('yaaseenFormSection').style.display = 'block';
+  document.getElementById('yaaseenView').style.display = 'none';
+}
+
+function createYaaseenFromPage() {
+  const desc   = document.getElementById('yaaseenDescPage').value.trim();
+  const target = parseInt(document.getElementById('yaaseenTargetPage').value) || 41;
+  if (!desc) { alert('Please enter a description.'); return; }
+  const y = { code: generateCode(), description: desc, target, total: 0, contributions: [], createdAt: new Date().toISOString() };
+  currentYaaseen = y;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(y))));
+  window.history.replaceState({}, '', `yaaseencounts.html?y=${encoded}`);
+  document.getElementById('yaaseenFormSection').style.display = 'none';
   document.getElementById('yaaseenView').style.display = 'block';
   renderYaaseen(y);
 }
 
-function saveYaaseen(y) {
-  const all = JSON.parse(localStorage.getItem('mqt_yaaseens') || '[]');
-  const idx = all.findIndex(a => a.code === y.code);
-  if (idx >= 0) all[idx] = y; else all.push(y);
-  localStorage.setItem('mqt_yaaseens', JSON.stringify(all));
-}
-
 function renderYaaseen(y) {
   document.getElementById('yaaseenTitle').textContent         = y.description;
-  document.getElementById('yaaseenCodeDisplay').textContent   = y.code;
   document.getElementById('yaaseenTotal').textContent         = y.total;
   document.getElementById('yaaseenTargetDisplay').textContent = y.target;
   const pct = Math.min(100, Math.round((y.total / y.target) * 100));
@@ -282,57 +393,47 @@ function renderYaaseen(y) {
   const list = document.getElementById('yaaseenContributions');
   list.innerHTML = y.contributions.length === 0
     ? '<div class="empty-state"><i class="fas fa-star-and-crescent"></i><p>No contributions yet — be the first!</p></div>'
-    : y.contributions.map(c => `
-        <div class="contrib-item">
-          <span class="contrib-name">${c.name}</span>
-          <span class="contrib-count">${c.count}</span>
-        </div>`).join('');
+    : y.contributions.map(c =>
+        `<div class="contrib-item"><span class="contrib-name">${c.name}</span><span class="contrib-count">${c.count}</span></div>`
+      ).join('');
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(y))));
+  window.history.replaceState({}, '', `yaaseencounts.html?y=${encoded}`);
 }
 
 function tapYaaseen() {
   yaaseenSession++;
   const el = document.getElementById('yaaseenSession');
-  el.textContent = yaaseenSession;
-  el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 250);
+  if (el) { el.textContent = yaaseenSession; el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 250); }
 }
 
 function saveYaaseenSession() {
   if (yaaseenSession === 0) { alert('Tap the button first!'); return; }
-  const code = getParam('code');
   const name = document.getElementById('yaaseenYourName').value.trim() || 'Anonymous';
-  const all  = JSON.parse(localStorage.getItem('mqt_yaaseens') || '[]');
-  const y    = all.find(a => a.code === code);
-  if (!y) return;
-  y.total += yaaseenSession;
-  const ex = y.contributions.find(c => c.name === name);
-  if (ex) ex.count += yaaseenSession; else y.contributions.push({ name, count: yaaseenSession });
-  saveYaaseen(y);
+  if (!currentYaaseen) return;
+  currentYaaseen.total += yaaseenSession;
+  const ex = currentYaaseen.contributions.find(c => c.name === name);
+  if (ex) ex.count += yaaseenSession; else currentYaaseen.contributions.push({ name, count: yaaseenSession });
   yaaseenSession = 0;
-  document.getElementById('yaaseenSession').textContent = '0';
-  renderYaaseen(y);
+  const el = document.getElementById('yaaseenSession'); if (el) el.textContent = '0';
+  renderYaaseen(currentYaaseen);
 }
 
-function createYaaseenFromPage() {
-  const desc   = document.getElementById('yaaseenDescPage').value.trim();
-  const target = parseInt(document.getElementById('yaaseenTargetPage').value) || 41;
-  if (!desc) { alert('Please enter a description.'); return; }
-  const code = generateCode();
-  const y = { code, description: desc, target, total: 0, contributions: [], createdAt: new Date().toISOString() };
-  saveYaaseen(y);
-  window.history.replaceState({}, '', 'yaaseencounts.html?code=' + code);
-  document.getElementById('yaaseenFormSection').style.display = 'none';
-  document.getElementById('yaaseenView').style.display = 'block';
-  renderYaaseen(y);
+function shareYaaseenWhatsApp() {
+  if (!currentYaaseen) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(currentYaaseen))));
+  const url = `${location.origin}${location.pathname.replace(/\/[^/]*$/, '/')}yaaseencounts.html?y=${encoded}`;
+  const msg = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nJoin and add your count:\n`;
+  whatsappShare(msg, url);
 }
 
-function joinYaaseenFromPage() {
-  const code  = document.getElementById('joinYaaseenPage').value.trim().toUpperCase();
-  if (!code) { alert('Please enter a code.'); return; }
-  const all   = JSON.parse(localStorage.getItem('mqt_yaaseens') || '[]');
-  const found = all.find(y => y.code === code);
-  if (!found) { alert('Counter not found. Double check the code.'); return; }
-  window.history.replaceState({}, '', 'yaaseencounts.html?code=' + code);
-  document.getElementById('yaaseenFormSection').style.display = 'none';
-  document.getElementById('yaaseenView').style.display = 'block';
-  renderYaaseen(found);
+// ─────────────────────────────────────────────
+//  DRAWER
+// ─────────────────────────────────────────────
+function openDrawer()  {
+  document.getElementById('drawer')?.classList.add('open');
+  document.getElementById('overlay')?.classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer')?.classList.remove('open');
+  document.getElementById('overlay')?.classList.remove('open');
 }
