@@ -2,40 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Yaaseen Counter</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <title>Yaaseen Counter — My Quraan Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <i class="fas fa-bars"></i>
-    <span class="site-name">quraantracker</span>
-    <div class="header-icons">
-      <i class="fas fa-circle-question"></i>
-      <i class="fas fa-user-circle"></i>
-    </div>
+
+  <header class="app-header">
+    <button class="header-btn" onclick="openDrawer()"><i class="fas fa-bars"></i></button>
+    <a href="index.html" class="header-logo"><img src="myquraantracker logo.png" alt="My Quraan Tracker"></a>
+    <button class="header-btn"><i class="fas fa-user-circle"></i></button>
   </header>
 
-  <h1>Surah Yaaseen Counter</h1>
-  <p class="subtitle">Log and track your Yaaseen recitations individually or in groups.</p>
+  <div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
+  <nav class="drawer" id="drawer">
+    <div class="drawer-head">
+      <img src="myquraantracker_logo.png" alt="Logo">
+      <button class="drawer-close" onclick="closeDrawer()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="drawer-nav">
+      <a href="index.html"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
+      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
+      <a href="zikr.html"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
+      <a href="yaaseencounts.html" class="active"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
+    </div>
+    <div class="drawer-footer">For the pleasure of Allah<br>By Olideen Technologies</div>
+  </nav>
 
-  <section class="powder">
-    <input type="text" placeholder="Enter description…">
-    <input type="number" placeholder="Target count…">
-    <button style="font-size:1.2rem; border-radius:50px;">+1 Recitation</button>
-    <p>Current Count: <span id="count">0</span></p>
-    <p>Group Total: <span id="groupTotal">0</span></p>
-  </section>
+  <div class="page-hero">
+    <div class="page-hero-arabic">يٰسٓ ۚ وَالْقُرْاٰنِ الْحَكِيْمِ</div>
+    <h1>Yaaseen Counter</h1>
+    <p>Track Surah Yaaseen recitations — individually or as a group</p>
+  </div>
 
-  <footer>
-    <p>For the pleasure of Allah, By Olideen Technologies</p>
-    <nav>
-      <a href="#">Terms</a> • <a href="#">Disclaimer</a> • <a href="#">Privacy</a>
-    </nav>
-  </footer>
+  <!-- FORM -->
+  <div id="yaaseenFormSection" class="page-body" style="display:none">
+    <div class="card fade-up">
+      <div class="card-stripe gold"></div>
+      <div class="card-body">
+        <div class="card-icon-row">
+          <div class="card-icon gold"><i class="fas fa-star-and-crescent"></i></div>
+          <div class="card-title gold-text">Start a Yaaseen Count</div>
+        </div>
+        <p class="card-desc">Set an intention and a target, then share the code so your family or community can contribute their recitations.</p>
+        <input type="text" id="yaaseenDescPage" class="field" placeholder="Intention (e.g. For Dadi's Esaale Sawaab)…">
+        <input type="number" id="yaaseenTargetPage" class="field" placeholder="Target (e.g. 41, 100)…">
+        <button class="btn btn-gold" onclick="createYaaseenFromPage()"><i class="fas fa-plus"></i> Create Counter</button>
+        <div class="or-line">already have a code?</div>
+        <div class="join-row">
+          <input type="text" id="joinYaaseenPage" class="field" placeholder="Enter code…" style="text-transform:uppercase;letter-spacing:0.1em;">
+          <button class="btn btn-outline btn-sm" onclick="joinYaaseenFromPage()">Join</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YAASEEN VIEW -->
+  <div id="yaaseenView" class="page-body" style="display:none">
+
+    <!-- Share -->
+    <div class="share-box fade-up">
+      <div>
+        <div style="font-size:0.7rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Share Code</div>
+        <div class="share-code" id="yaaseenCodeDisplay">------</div>
+      </div>
+      <button class="copy-btn" onclick="doYaaseenCopy()">Copy</button>
+    </div>
+
+    <!-- Counter -->
+    <div class="card fade-up">
+      <div class="card-stripe gold"></div>
+      <div class="card-body" style="text-align:center;">
+        <div id="yaaseenTitle" style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--gold-dark);margin-bottom:0.5rem;"></div>
+
+        <div class="progress-wrap" style="margin-bottom:0.3rem;">
+          <div class="progress-fill gold" id="yaaseenProgressFill" style="width:0%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-soft);margin-bottom:1rem;">
+          <span>Total: <strong id="yaaseenTotal" style="color:var(--teal);">0</strong></span>
+          <span>Target: <strong id="yaaseenTargetDisplay" style="color:var(--gold-dark);">0</strong></span>
+        </div>
+
+        <p style="font-size:0.8rem;color:var(--text-soft);margin-bottom:0.5rem;">Each tap = one full Surah Yaaseen</p>
+        <div class="tap-zone">
+          <div class="big-number gold-num" id="yaaseenSession">0</div>
+          <button class="tap-circle gold-tap" onclick="tapYaaseen()">
+            <i class="fas fa-star-and-crescent"></i>
+            +1
+          </button>
+        </div>
+
+        <input type="text" id="yaaseenYourName" class="field" placeholder="Your name…" style="text-align:center;">
+        <button class="btn btn-gold" onclick="saveYaaseenSession()"><i class="fas fa-floppy-disk"></i> Save My Count</button>
+      </div>
+    </div>
+
+    <!-- Contributions -->
+    <div class="card fade-up-2">
+      <div class="card-body">
+        <div style="font-weight:700;color:var(--gold-dark);margin-bottom:0.75rem;font-size:0.95rem;"><i class="fas fa-users" style="margin-right:0.4rem;"></i>Contributions</div>
+        <div id="yaaseenContributions">
+          <div class="empty-state"><i class="fas fa-star-and-crescent"></i><p>No contributions yet — be the first!</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatm</a>
+    <a href="zikr.html"><i class="fas fa-infinity"></i> Zikr</a>
+    <a href="yaaseencounts.html" class="active"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
+  </nav>
 
   <script src="script.js"></script>
+  <script>
+    function openDrawer()  { document.getElementById('drawer').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
+    function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+    function doYaaseenCopy() {
+      const code = document.getElementById('yaaseenCodeDisplay').textContent;
+      navigator.clipboard.writeText(code);
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = 'Copy', 1800);
+    }
+    window.addEventListener('DOMContentLoaded', initYaaseenPage);
+  </script>
 </body>
 </html>

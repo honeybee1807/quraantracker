@@ -2,55 +2,201 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>QuraanTracker - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <title>My Quraan Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <i class="fas fa-bars"></i>
-    <span class="site-name">quraantracker</span>
-    <div class="header-icons">
-      <i class="fas fa-circle-question"></i>
-      <i class="fas fa-user-circle"></i>
-    </div>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <button class="header-btn" onclick="openDrawer()"><i class="fas fa-bars"></i></button>
+    <a href="index.html" class="header-logo"><img src="myquraantracker logo.png" alt="My Quraan Tracker"></a>
+    <button class="header-btn"><i class="fas fa-user-circle"></i></button>
   </header>
 
-  <section class="lavender">
-    <h2>Coordinating a Khatm with others or for yourself?</h2>
-    <p class="subtitle">Easily organize and manage Quraan reading in a group or by yourself, no messy messages to keep track of.</p>
-    <input type="text" placeholder="Enter Khatm details…">
-    <button class="circle-btn"><i class="fas fa-arrow-right"></i></button>
-  </section>
-
-  <section class="sage">
-    <h2>Tracking your Dhikr, Dua, Salawat counts?</h2>
-    <p class="subtitle">Keep track of your personal or group Dhikr, Dua, and Salawat counts in one place.</p>
-    <input type="text" placeholder="Enter descriptions…">
-    <input type="number" placeholder="Target count…">
-    <button class="circle-btn"><i class="fas fa-arrow-right"></i></button>
-  </section>
-
-  <section class="quick-tools">
-    <div class="card blush">
-      <h3>Tasbeeh Counter</h3>
-      <p class="subtitle">Tap to count your dhikr — no login needed.</p>
-      <button>Start Counting</button>
+  <!-- DRAWER -->
+  <div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
+  <nav class="drawer" id="drawer">
+    <div class="drawer-head">
+      <img src="myquraantracker_logo.png" alt="Logo">
+      <button class="drawer-close" onclick="closeDrawer()"><i class="fas fa-times"></i></button>
     </div>
-    <div class="card powder">
-      <h3>Ramadan Tracker</h3>
-      <p class="subtitle">Log and monitor your Ramadan worship and deeds.</p>
-      <button>Begin Tracking</button>
+    <div class="drawer-nav">
+      <a href="index.html" class="active"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
+      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
+      <a href="zikr.html"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
+      <a href="yaaseencounts.html"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
     </div>
-  </section>
+    <div class="drawer-footer">For the pleasure of Allah<br>By Olideen Technologies</div>
+  </nav>
 
-  <footer>
-    <p>For the pleasure of Allah, By Olideen Technologies</p>
-    <nav>
-      <a href="#">Terms</a> • <a href="#">Disclaimer</a> • <a href="#">Privacy</a>
-    </nav>
-  </footer>
+  <!-- HERO -->
+  <div class="hero-banner fade-up">
+    <div class="hero-arabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+    <h1 class="hero-title">My <em>Quraan</em> Tracker</h1>
+    <p class="hero-sub">Track your Khatm, count your Zikr, and worship together — simply.</p>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-body">
+
+    <!-- KHATM CARD -->
+    <div class="section-label">Quraan Khatm</div>
+    <div class="card fade-up">
+      <div class="card-stripe"></div>
+      <div class="card-body">
+        <div class="card-icon-row">
+          <div class="card-icon teal"><i class="fas fa-book-quran"></i></div>
+          <div>
+            <div class="card-title">Start or Join a Khatm</div>
+          </div>
+        </div>
+        <p class="card-desc">Completing a Quraan Khatm with your family or community? Create one, share the code, and everyone can claim and complete their paras together.</p>
+        <input type="text" id="khatmDesc" class="field" placeholder="Name your Khatm (e.g. For Dadi)…">
+        <button class="btn btn-primary" onclick="createKhatm()"><i class="fas fa-plus"></i> Create Khatm</button>
+        <div class="or-line">or join one</div>
+        <div class="join-row">
+          <input type="text" id="joinCode" class="field" placeholder="Enter code…" style="text-transform:uppercase;letter-spacing:0.1em;">
+          <button class="btn btn-outline btn-sm" onclick="joinKhatm()">Join</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZIKR CARD -->
+    <div class="section-label">Zikr & Durood</div>
+    <div class="card fade-up-2">
+      <div class="card-stripe gold"></div>
+      <div class="card-body">
+        <div class="card-icon-row">
+          <div class="card-icon gold"><i class="fas fa-infinity"></i></div>
+          <div>
+            <div class="card-title gold-text">Count Zikr Together</div>
+          </div>
+        </div>
+        <p class="card-desc">Set a group target for Durood, Tasbeeh or any Zikr. Share the code and track everyone's contributions in one place.</p>
+        <input type="text" id="zikrDesc" class="field" placeholder="What are you counting? (e.g. Durood Ibrahim)…">
+        <input type="number" id="zikrTarget" class="field" placeholder="Target count (e.g. 1000)…">
+        <button class="btn btn-gold" onclick="createZikr()"><i class="fas fa-plus"></i> Create Counter</button>
+        <div class="or-line">or join one</div>
+        <div class="join-row">
+          <input type="text" id="joinZikrCode" class="field" placeholder="Enter code…" style="text-transform:uppercase;letter-spacing:0.1em;">
+          <button class="btn btn-ghost btn-sm" onclick="joinZikr()">Join</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK TOOLS -->
+    <div class="section-label">Quick Tools</div>
+    <div class="card fade-up-3">
+      <div class="card-body" style="padding:1rem;">
+        <a href="zikr.html" style="text-decoration:none;">
+          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid var(--border);">
+            <div class="card-icon teal" style="width:42px;height:42px;border-radius:12px;font-size:1.1rem;"><i class="fas fa-hand-dots"></i></div>
+            <div>
+              <div style="font-weight:700;color:var(--teal);font-size:0.95rem;">Tasbeeh Counter</div>
+              <div style="font-size:0.78rem;color:var(--text-soft);">Tap to count — no setup needed</div>
+            </div>
+            <i class="fas fa-chevron-right" style="color:var(--border);margin-left:auto;"></i>
+          </div>
+        </a>
+        <a href="yaaseencounts.html" style="text-decoration:none;">
+          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;">
+            <div class="card-icon gold" style="width:42px;height:42px;border-radius:12px;font-size:1.1rem;"><i class="fas fa-star-and-crescent"></i></div>
+            <div>
+              <div style="font-weight:700;color:var(--gold-dark);font-size:0.95rem;">Yaaseen Counter</div>
+              <div style="font-size:0.78rem;color:var(--text-soft);">Track group Yaaseen recitations</div>
+            </div>
+            <i class="fas fa-chevron-right" style="color:var(--border);margin-left:auto;"></i>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- MY KHATMS -->
+    <div id="myKhatmsSection" style="display:none">
+      <div class="section-label">My Khatms</div>
+      <div id="myKhatmsList"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="active"><i class="fas fa-home"></i> Home</a>
+    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatm</a>
+    <a href="zikr.html"><i class="fas fa-infinity"></i> Zikr</a>
+    <a href="yaaseencounts.html"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
+  </nav>
+
+  <script src="script.js"></script>
+  <script>
+    function openDrawer()  { document.getElementById('drawer').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
+    function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+
+    function generateCode() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
+
+    function createKhatm() {
+      const desc = document.getElementById('khatmDesc').value.trim();
+      if (!desc) { alert('Please enter a name for your Khatm.'); return; }
+      const code = generateCode();
+      const khatm = { code, description: desc, createdAt: new Date().toISOString(),
+        paras: Array.from({length:30}, (_,i) => ({ number: i+1, assignedTo:'', completed: false })) };
+      const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+      all.push(khatm);
+      localStorage.setItem('mqt_khatms', JSON.stringify(all));
+      window.location.href = 'quraan.html?code=' + code;
+    }
+
+    function joinKhatm() {
+      const code = document.getElementById('joinCode').value.trim().toUpperCase();
+      if (!code) { alert('Please enter a code.'); return; }
+      const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+      if (!all.find(k => k.code === code)) { alert('Khatm not found. Double check the code.'); return; }
+      window.location.href = 'quraan.html?code=' + code;
+    }
+
+    function createZikr() {
+      const desc = document.getElementById('zikrDesc').value.trim();
+      const target = parseInt(document.getElementById('zikrTarget').value) || 100;
+      if (!desc) { alert('Please enter what you are counting.'); return; }
+      const code = generateCode();
+      const zikr = { code, description: desc, target, total: 0, contributions: [], createdAt: new Date().toISOString() };
+      const all = JSON.parse(localStorage.getItem('mqt_zikrs') || '[]');
+      all.push(zikr);
+      localStorage.setItem('mqt_zikrs', JSON.stringify(all));
+      window.location.href = 'zikr.html?code=' + code;
+    }
+
+    function joinZikr() {
+      const code = document.getElementById('joinZikrCode').value.trim().toUpperCase();
+      if (!code) { alert('Please enter a code.'); return; }
+      const all = JSON.parse(localStorage.getItem('mqt_zikrs') || '[]');
+      if (!all.find(z => z.code === code)) { alert('Counter not found. Double check the code.'); return; }
+      window.location.href = 'zikr.html?code=' + code;
+    }
+
+    // Load my khatms
+    window.addEventListener('DOMContentLoaded', () => {
+      const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+      if (!all.length) return;
+      document.getElementById('myKhatmsSection').style.display = 'block';
+      const list = document.getElementById('myKhatmsList');
+      list.innerHTML = all.map(k => {
+        const done = k.paras.filter(p => p.completed).length;
+        const pct = Math.round((done/30)*100);
+        return `<a href="quraan.html?code=${k.code}" class="khatm-row">
+          <div class="khatm-row-icon"><i class="fas fa-book-quran"></i></div>
+          <div class="khatm-row-info">
+            <div class="khatm-row-name">${k.description}</div>
+            <div class="khatm-row-meta">Code: ${k.code} &bull; ${done}/30 paras</div>
+            <div class="progress-wrap" style="margin-top:0.4rem;height:6px;"><div class="progress-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="khatm-row-pct">${pct}%</div>
+        </a>`;
+      }).join('');
+    });
+  </script>
 </body>
 </html>
