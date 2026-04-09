@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quraan Khatam — My Quraan Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Quraan Khatm — My Quraan Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -23,7 +23,7 @@
     </div>
     <div class="drawer-nav">
       <a href="index.html"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
-      <a href="quraan.html" class="active"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatam</a>
+      <a href="quraan.html" class="active"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
       <a href="zikr.html"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
       <a href="yaaseencounts.html"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
     </div>
@@ -32,42 +32,42 @@
 
   <div class="page-hero">
     <div class="page-hero-arabic">وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</div>
-    <h1>Quraan Khatam</h1>
+    <h1>Quraan Khatm</h1>
     <p>Organise para allocations for your group</p>
   </div>
 
   <!-- CREATE / OPEN FORM -->
-  <div id="KhatamFormSection" class="page-body" style="display:none">
+  <div id="khatmFormSection" class="page-body" style="display:none">
     <div class="card fade-up">
       <div class="card-stripe"></div>
       <div class="card-body">
         <div class="card-icon-row">
           <div class="card-icon teal"><i class="fas fa-plus-circle"></i></div>
-          <div class="card-title">Start a New Khatam</div>
+          <div class="card-title">Start a New Khatm</div>
         </div>
-        <p class="card-desc">Give your Khatam a name, then share it on WhatsApp. Your family opens the link and claims their paras — no codes to type.</p>
-        <input type="text" id="KhatamDescPage" class="field" placeholder="Name / intention (e.g. For Nani)…">
-        <button class="btn btn-primary" onclick="createKhatamFromPage()"><i class="fas fa-plus"></i> Create & Share</button>
+        <p class="card-desc">Give your Khatm a name, then share it on WhatsApp. Your family opens the link and claims their paras — no codes to type.</p>
+        <input type="text" id="khatmDescPage" class="field" placeholder="e.g. Esale Sawaab…">
+        <button class="btn btn-primary" onclick="createKhatmFromPage()"><i class="fas fa-plus"></i> Create & Share</button>
       </div>
     </div>
   </div>
 
-  <!-- Khatam VIEW -->
-  <div id="KhatamView" class="page-body" style="display:none">
+  <!-- KHATM VIEW -->
+  <div id="khatmView" class="page-body" style="display:none">
 
     <!-- Complete Banner -->
-    <div id="KhatamComplete" class="success-banner fade-up" style="display:none">
+    <div id="khatmComplete" class="success-banner fade-up" style="display:none">
       <div class="arabic">اَلْحَمْدُ لِلَّه</div>
-      <h3>Khatam Complete! 🤲</h3>
+      <h3>Khatm Complete! 🤲</h3>
       <p>May Allah accept it from everyone. Ameen.</p>
     </div>
 
-    <!-- Khatam info + share -->
+    <!-- Khatm info + share -->
     <div class="card fade-up">
       <div class="card-stripe"></div>
       <div class="card-body">
-        <div style="font-size:0.68rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Khatam For</div>
-        <div id="KhatamTitle" style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--teal);margin-bottom:0.85rem;"></div>
+        <div style="font-size:0.68rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Khatm For</div>
+        <div id="khatmTitle" style="font-family:Georgia,'Times New Roman',serif;font-size:1.25rem;font-weight:700;color:var(--teal);margin-bottom:0.85rem;"></div>
 
         <div class="progress-wrap">
           <div class="progress-fill" id="progressFill" style="width:0%"></div>
@@ -79,15 +79,15 @@
 
         <!-- WhatsApp share -->
         <div style="display:flex;gap:0.6rem;margin-top:1rem;">
-          <button class="btn btn-primary" style="flex:1;background:#25D366;" onclick="shareKhatamWhatsApp()">
+          <button class="btn btn-primary" style="flex:1;background:#25D366;" onclick="shareKhatmWhatsApp()">
             <i class="fab fa-whatsapp"></i> Share on WhatsApp
           </button>
-          <button id="copyLinkBtn" class="btn btn-ghost btn-sm" onclick="copyKhatamLink()" style="flex-shrink:0;">
+          <button id="copyLinkBtn" class="btn btn-ghost btn-sm" onclick="copyKhatmLink()" style="flex-shrink:0;">
             Copy Link
           </button>
         </div>
         <p style="font-size:0.73rem;color:var(--text-soft);margin-top:0.5rem;text-align:center;">
-          After updating the Khatam, share again so everyone sees the latest version.
+          After updating the Khatm, share again so everyone sees the latest version.
         </p>
       </div>
     </div>
@@ -104,8 +104,8 @@
 
     <!-- Share update button at bottom -->
     <div style="margin-top:1.5rem;">
-      <button class="btn" style="background:#25D366;color:white;" onclick="shareKhatamWhatsApp()">
-        <i class="fab fa-whatsapp"></i> Share Updated Khatam
+      <button class="btn" style="background:#25D366;color:white;" onclick="shareKhatmWhatsApp()">
+        <i class="fab fa-whatsapp"></i> Share Updated Khatm
       </button>
     </div>
 
@@ -113,14 +113,14 @@
 
   <nav class="bottom-nav">
     <a href="index.html"><i class="fas fa-home"></i> Home</a>
-    <a href="quraan.html" class="active"><i class="fas fa-book-open"></i> Khatam</a>
+    <a href="quraan.html" class="active"><i class="fas fa-book-open"></i> Khatm</a>
     <a href="zikr.html"><i class="fas fa-infinity"></i> Zikr</a>
     <a href="yaaseencounts.html"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
   </nav>
 
   <script src="script.js"></script>
   <script>
-    window.addEventListener('DOMContentLoaded', initKhatamPage);
+    window.addEventListener('DOMContentLoaded', initKhatmPage);
   </script>
 </body>
 </html>

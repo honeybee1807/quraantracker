@@ -20,13 +20,13 @@ function getParam(n) {
   return new URLSearchParams(window.location.search).get(n);
 }
 
-// Encode Khatam object into a URL-safe string
-function encodeKhatam(Khatam) {
-  return btoa(unescape(encodeURIComponent(JSON.stringify(Khatam))));
+// Encode khatm object into a URL-safe string
+function encodeKhatm(khatm) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(khatm))));
 }
 
-// Decode Khatam from URL string
-function decodeKhatam(str) {
+// Decode khatm from URL string
+function decodeKhatm(str) {
   try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
   catch(e) { return null; }
 }
@@ -41,17 +41,17 @@ function decodeZikr(str) {
   catch(e) { return null; }
 }
 
-// Build the shareable WhatsApp link for a Khatam
-function buildKhatamShareLink(Khatam) {
-  const encoded = encodeKhatam(Khatam);
-  const url = `${location.origin}${location.pathname.replace('index.html','').replace(/\/[^/]*$/, '/')  }quraan.html?k=${encoded}`;
-  return url;
+// Build the shareable WhatsApp link for a khatm
+const APP_DOMAIN = 'https://myquraantracker.netlify.app';
+
+function buildKhatmShareLink(khatm) {
+  const encoded = encodeKhatm(khatm);
+  return `${APP_DOMAIN}/quraan.html?k=${encoded}`;
 }
 
 function buildZikrShareLink(zikr) {
   const encoded = encodeZikr(zikr);
-  const url = `${location.origin}${location.pathname.replace('index.html','').replace(/\/[^/]*$/, '/')}zikr.html?z=${encoded}`;
-  return url;
+  return `${APP_DOMAIN}/zikr.html?z=${encoded}`;
 }
 
 function whatsappShare(text, url) {
@@ -59,12 +59,12 @@ function whatsappShare(text, url) {
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
 
-// Save Khatam to localStorage (for "My Khatams" list on home)
-function saveKhatamLocal(Khatam) {
-  const all = JSON.parse(localStorage.getItem('mqt_Khatams') || '[]');
-  const idx = all.findIndex(k => k.code === Khatam.code);
-  if (idx >= 0) all[idx] = Khatam; else all.push(Khatam);
-  localStorage.setItem('mqt_Khatams', JSON.stringify(all));
+// Save khatm to localStorage (for "My Khatms" list on home)
+function saveKhatmLocal(khatm) {
+  const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+  const idx = all.findIndex(k => k.code === khatm.code);
+  if (idx >= 0) all[idx] = khatm; else all.push(khatm);
+  localStorage.setItem('mqt_khatms', JSON.stringify(all));
 }
 
 function generateCode() {
@@ -72,39 +72,39 @@ function generateCode() {
 }
 
 // ─────────────────────────────────────────────
-//  Khatam PAGE
+//  KHATM PAGE
 // ─────────────────────────────────────────────
-let activeKhatam = null;
+let activeKhatm = null;
 
-function initKhatamPage() {
-  // Check URL for encoded Khatam data
+function initKhatmPage() {
+  // Check URL for encoded khatm data
   const kParam = getParam('k');
   if (kParam) {
-    const Khatam = decodeKhatam(kParam);
-    if (!Khatam) { showKhatamForm(); return; }
-    activeKhatam = Khatam;
-    saveKhatamLocal(Khatam); // save locally so it appears in "My Khatams"
-    showKhatamView(Khatam);
+    const khatm = decodeKhatm(kParam);
+    if (!khatm) { showKhatmForm(); return; }
+    activeKhatm = khatm;
+    saveKhatmLocal(khatm); // save locally so it appears in "My Khatms"
+    showKhatmView(khatm);
     return;
   }
-  showKhatamForm();
+  showKhatmForm();
 }
 
-function showKhatamForm() {
-  document.getElementById('KhatamFormSection').style.display = 'block';
-  document.getElementById('KhatamView').style.display = 'none';
+function showKhatmForm() {
+  document.getElementById('khatmFormSection').style.display = 'block';
+  document.getElementById('khatmView').style.display = 'none';
 }
 
-function showKhatamView(Khatam) {
-  document.getElementById('KhatamFormSection').style.display = 'none';
-  document.getElementById('KhatamView').style.display = 'block';
-  renderKhatam(Khatam);
+function showKhatmView(khatm) {
+  document.getElementById('khatmFormSection').style.display = 'none';
+  document.getElementById('khatmView').style.display = 'block';
+  renderKhatm(khatm);
 }
 
-function createKhatamFromPage() {
-  const desc = document.getElementById('KhatamDescPage').value.trim();
-  if (!desc) { alert('Please enter a name for your Khatam first.'); return; }
-  const Khatam = {
+function createKhatmFromPage() {
+  const desc = document.getElementById('khatmDescPage').value.trim();
+  if (!desc) { alert('Please enter a name for your Khatm first.'); return; }
+  const khatm = {
     code: generateCode(),
     description: desc,
     createdAt: new Date().toISOString(),
@@ -112,34 +112,34 @@ function createKhatamFromPage() {
       number: i + 1, assignedTo: '', completed: false
     }))
   };
-  activeKhatam = Khatam;
-  saveKhatamLocal(Khatam);
+  activeKhatm = khatm;
+  saveKhatmLocal(khatm);
   // Push to URL so page can be refreshed / shared
-  const encoded = encodeKhatam(Khatam);
+  const encoded = encodeKhatm(khatm);
   window.history.replaceState({}, '', `quraan.html?k=${encoded}`);
-  showKhatamView(Khatam);
+  showKhatmView(khatm);
 }
 
-function renderKhatam(Khatam) {
+function renderKhatm(khatm) {
   // Title & code
-  document.getElementById('KhatamTitle').textContent = Khatam.description;
+  document.getElementById('khatmTitle').textContent = khatm.description;
 
   // Progress
-  const done = Khatam.paras.filter(p => p.completed).length;
+  const done = khatm.paras.filter(p => p.completed).length;
   const pct  = Math.round((done / 30) * 100);
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('progressText').textContent = `${done} of 30 paras done`;
   document.getElementById('progressPct').textContent  = pct + '%';
 
-  if (done === 30) document.getElementById('KhatamComplete').style.display = 'block';
+  if (done === 30) document.getElementById('khatmComplete').style.display = 'block';
 
   // Update share URL in the URL bar
-  const encoded = encodeKhatam(Khatam);
+  const encoded = encodeKhatm(khatm);
   window.history.replaceState({}, '', `quraan.html?k=${encoded}`);
 
   // Paras grid
   const grid = document.getElementById('parasGrid');
-  grid.innerHTML = Khatam.paras.map(para => {
+  grid.innerHTML = khatm.paras.map(para => {
     if (para.completed) {
       return `<div class="para-tile completed unavailable">
         <span class="para-num">${para.number}</span>
@@ -165,38 +165,38 @@ function renderKhatam(Khatam) {
 }
 
 function claimPara(num) {
-  if (!activeKhatam) return;
+  if (!activeKhatm) return;
   const name = document.getElementById('yourName').value.trim();
   if (!name) { alert('Please enter your name first!'); document.getElementById('yourName').focus(); return; }
-  const para = activeKhatam.paras.find(p => p.number === num);
+  const para = activeKhatm.paras.find(p => p.number === num);
   if (!para || para.assignedTo) return;
   para.assignedTo = name;
-  saveKhatamLocal(activeKhatam);
-  renderKhatam(activeKhatam);
+  saveKhatmLocal(activeKhatm);
+  renderKhatm(activeKhatm);
 }
 
 function markDone(num) {
-  if (!activeKhatam) return;
-  const para = activeKhatam.paras.find(p => p.number === num);
+  if (!activeKhatm) return;
+  const para = activeKhatm.paras.find(p => p.number === num);
   if (!para) return;
   if (!confirm(`Mark Para ${num} as complete?`)) return;
   para.completed = true;
-  saveKhatamLocal(activeKhatam);
-  renderKhatam(activeKhatam);
+  saveKhatmLocal(activeKhatm);
+  renderKhatm(activeKhatm);
 }
 
-// Share updated Khatam via WhatsApp
-function shareKhatamWhatsApp() {
-  if (!activeKhatam) return;
-  const link = buildKhatamShareLink(activeKhatam);
-  const msg  = `📖 *${activeKhatam.description}* — Quraan Khatam\nJoin us and claim your para:\n`;
+// Share updated Khatm via WhatsApp
+function shareKhatmWhatsApp() {
+  if (!activeKhatm) return;
+  const link = buildKhatmShareLink(activeKhatm);
+  const msg  = `📖 *${activeKhatm.description}* — Quraan Khatm\nJoin us and claim your para:\n`;
   whatsappShare(msg, link);
 }
 
 // Copy the share link to clipboard
-function copyKhatamLink() {
-  if (!activeKhatam) return;
-  const link = buildKhatamShareLink(activeKhatam);
+function copyKhatmLink() {
+  if (!activeKhatm) return;
+  const link = buildKhatmShareLink(activeKhatm);
   navigator.clipboard.writeText(link).then(() => {
     const btn = document.getElementById('copyLinkBtn');
     if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy Link', 1800); }
@@ -204,27 +204,27 @@ function copyKhatamLink() {
 }
 
 // ─────────────────────────────────────────────
-//  HOME PAGE — load from URL if Khatam in param
+//  HOME PAGE — load from URL if khatm in param
 // ─────────────────────────────────────────────
 function initHomePage() {
-  // Load my Khatams from localStorage for the "My Khatams" section
-  const all = JSON.parse(localStorage.getItem('mqt_Khatams') || '[]');
-  const section = document.getElementById('myKhatamsSection');
-  const list    = document.getElementById('myKhatamsList');
+  // Load my khatms from localStorage for the "My Khatms" section
+  const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+  const section = document.getElementById('myKhatmsSection');
+  const list    = document.getElementById('myKhatmsList');
   if (!all.length || !section) return;
   section.style.display = 'block';
   list.innerHTML = all.map(k => {
     const done = k.paras.filter(p => p.completed).length;
     const pct  = Math.round((done / 30) * 100);
-    const encoded = encodeKhatam(k);
-    return `<a href="quraan.html?k=${encoded}" class="Khatam-row">
-      <div class="Khatam-row-icon"><i class="fas fa-book-quran"></i></div>
-      <div class="Khatam-row-info">
-        <div class="Khatam-row-name">${k.description}</div>
-        <div class="Khatam-row-meta">${done}/30 paras done</div>
+    const encoded = encodeKhatm(k);
+    return `<a href="quraan.html?k=${encoded}" class="khatm-row">
+      <div class="khatm-row-icon"><i class="fas fa-book-quran"></i></div>
+      <div class="khatm-row-info">
+        <div class="khatm-row-name">${k.description}</div>
+        <div class="khatm-row-meta">${done}/30 paras done</div>
         <div class="progress-wrap" style="margin-top:0.35rem;height:6px;"><div class="progress-fill" style="width:${pct}%"></div></div>
       </div>
-      <div class="Khatam-row-pct">${pct}%</div>
+      <div class="khatm-row-pct">${pct}%</div>
     </a>`;
   }).join('');
 }
@@ -421,7 +421,7 @@ function saveYaaseenSession() {
 function shareYaaseenWhatsApp() {
   if (!currentYaaseen) return;
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(currentYaaseen))));
-  const url = `${location.origin}${location.pathname.replace(/\/[^/]*$/, '/')}yaaseencounts.html?y=${encoded}`;
+  const url = `${APP_DOMAIN}/yaaseencounts.html?y=${encoded}`;
   const msg = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nJoin and add your count:\n`;
   whatsappShare(msg, url);
 }

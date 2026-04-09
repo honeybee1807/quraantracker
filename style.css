@@ -4,9 +4,13 @@
    Brand: Deep Teal #0D4A3E + Gold #C9A84C + Warm Cream #FAF7F2
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap');
+/* ── OFFLINE-SAFE SYSTEM FONTS ──
+   No Google Fonts — works without internet connection. */
 
 :root {
+  --font-serif:  Georgia, 'Times New Roman', serif;
+  --font-sans:   'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-arabic: 'Traditional Arabic', 'Arial Unicode MS', serif;
   --teal:         #0D4A3E;
   --teal-mid:     #1A6B58;
   --teal-soft:    #E6F0ED;
@@ -29,10 +33,10 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
 
 body {
-  font-family: 'Nunito', sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: var(--cream);
   color: var(--text);
   min-height: 100vh;
@@ -131,11 +135,11 @@ body::after {
   height: 30px; background: var(--cream); border-radius: 30px 30px 0 0;
 }
 .hero-arabic {
-  font-family: 'Amiri', serif; font-size: 1.45rem;
+  font-family: 'Traditional Arabic', 'Arial Unicode MS', serif; font-size: 1.45rem;
   color: var(--gold-warm); margin-bottom: 0.7rem; line-height: 1.8;
 }
 .hero-title {
-  font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 1.8rem; font-weight: 700;
   color: white; line-height: 1.2; margin-bottom: 0.5rem;
 }
 .hero-title em { font-style: italic; color: var(--gold-warm); }
@@ -173,7 +177,7 @@ body::after {
 .card-icon.gold  { background: var(--gold-soft); color: var(--gold-dark); }
 
 .card-title {
-  font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 1.2rem; font-weight: 700;
   color: var(--teal); line-height: 1.2;
 }
 .card-title.gold-text { color: var(--gold-dark); }
@@ -183,7 +187,7 @@ body::after {
 .field {
   width: 100%; padding: 0.9rem 1.1rem;
   border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  font-family: 'Nunito', sans-serif; font-size: 1rem; color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 1rem; color: var(--text);
   background: var(--cream); outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   margin-bottom: 0.75rem; -webkit-appearance: none;
@@ -195,9 +199,10 @@ body::after {
 .btn {
   display: flex; align-items: center; justify-content: center; gap: 0.5rem;
   width: 100%; padding: 1rem; border: none; border-radius: var(--radius-sm);
-  font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 1rem; font-weight: 700;
   cursor: pointer; transition: transform 0.12s, filter 0.2s;
   -webkit-tap-highlight-color: transparent; text-decoration: none; text-align: center;
+  touch-action: manipulation;
 }
 .btn:active { transform: scale(0.96); }
 .btn-primary { background: linear-gradient(135deg, var(--teal), var(--teal-mid)); color: white; box-shadow: 0 4px 16px rgba(13,74,62,0.28); }
@@ -241,13 +246,13 @@ body::after {
   padding: 0.85rem 1rem; margin-bottom: 1rem;
 }
 .share-code {
-  font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 700;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 1.55rem; font-weight: 700;
   color: var(--teal); letter-spacing: 0.15em; flex: 1;
 }
 .copy-btn {
   background: var(--teal); color: white; border: none;
   border-radius: 10px; padding: 0.45rem 0.9rem;
-  font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 0.8rem; font-weight: 700;
   cursor: pointer; white-space: nowrap;
 }
 .copy-btn:active { filter: brightness(0.85); }
@@ -263,7 +268,7 @@ body::after {
 .para-tile.assigned  { border-color: var(--gold);  background: var(--gold-soft); }
 .para-tile.completed { border-color: var(--teal);  background: var(--teal-soft); }
 .para-tile.unavailable { cursor: default; }
-.para-num  { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: var(--teal); display: block; line-height: 1; }
+.para-num  { font-family: Georgia, 'Times New Roman', serif; font-size: 1.35rem; font-weight: 700; color: var(--teal); display: block; line-height: 1; }
 .para-name { font-size: 0.56rem; color: var(--text-soft); display: block; margin-top: 0.15rem; line-height: 1.3; }
 .para-who  { font-size: 0.63rem; font-weight: 700; color: var(--gold-dark); display: block; margin-top: 0.2rem; }
 .para-tick { font-size: 0.85rem; color: var(--teal); display: block; margin-top: 0.15rem; }
@@ -274,9 +279,10 @@ body::after {
   width: 136px; height: 136px; border-radius: 50%;
   background: linear-gradient(145deg, var(--teal-mid), var(--teal)); color: white; border: none;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0.2rem; font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
+  gap: 0.2rem; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 0.8rem; font-weight: 700;
   cursor: pointer; box-shadow: 0 8px 28px rgba(13,74,62,0.35);
   transition: transform 0.1s, box-shadow 0.1s; -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   text-transform: uppercase; letter-spacing: 0.05em;
 }
 .tap-circle i { font-size: 2rem; }
@@ -285,7 +291,7 @@ body::after {
 .tap-circle.gold-tap:active { box-shadow: 0 4px 14px rgba(201,168,76,0.22); }
 
 .big-number {
-  font-family: 'Playfair Display', serif; font-size: 4.5rem; font-weight: 700;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 4.5rem; font-weight: 700;
   color: var(--teal); line-height: 1; text-align: center; margin-bottom: 0.2rem;
 }
 .big-number.gold-num { color: var(--gold-dark); }
@@ -295,7 +301,7 @@ body::after {
 .stat-pill { background: var(--cream-dark); border-radius: var(--radius-sm); padding: 0.85rem; text-align: center; }
 .stat-pill.teal-pill { background: var(--teal-soft); }
 .stat-pill.gold-pill  { background: var(--gold-soft); }
-.stat-val { font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 700; color: var(--teal); display: block; }
+.stat-val { font-family: Georgia, 'Times New Roman', serif; font-size: 1.55rem; font-weight: 700; color: var(--teal); display: block; }
 .stat-val.gold-val { color: var(--gold-dark); }
 .stat-lbl { font-size: 0.68rem; color: var(--text-soft); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 
@@ -307,7 +313,7 @@ body::after {
 .contrib-item:last-child { border-bottom: none; }
 .contrib-name { font-weight: 700; color: var(--teal); }
 .contrib-count {
-  font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 1.05rem; font-weight: 700;
   color: var(--gold-dark); background: var(--gold-soft); padding: 0.18rem 0.7rem; border-radius: 99px;
 }
 
@@ -316,8 +322,8 @@ body::after {
   background: linear-gradient(135deg, var(--teal), var(--teal-mid));
   border-radius: var(--radius-md); padding: 1.25rem 1.5rem; text-align: center; color: white; margin-bottom: 1rem;
 }
-.success-banner .arabic { font-family: 'Amiri', serif; font-size: 1.25rem; color: var(--gold-warm); }
-.success-banner h3 { font-family: 'Playfair Display', serif; font-size: 1.05rem; margin: 0.25rem 0 0.15rem; }
+.success-banner .arabic { font-family: 'Traditional Arabic', 'Arial Unicode MS', serif; font-size: 1.25rem; color: var(--gold-warm); }
+.success-banner h3 { font-family: Georgia, 'Times New Roman', serif; font-size: 1.05rem; margin: 0.25rem 0 0.15rem; }
 .success-banner p  { font-size: 0.8rem; opacity: 0.8; }
 
 /* ── PAGE HERO ── */
@@ -329,8 +335,8 @@ body::after {
   content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
   height: 26px; background: var(--cream); border-radius: 26px 26px 0 0;
 }
-.page-hero-arabic { font-family: 'Amiri', serif; font-size: 1.25rem; color: var(--gold-warm); margin-bottom: 0.35rem; }
-.page-hero h1 { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 700; color: white; margin-bottom: 0.2rem; }
+.page-hero-arabic { font-family: 'Traditional Arabic', 'Arial Unicode MS', serif; font-size: 1.25rem; color: var(--gold-warm); margin-bottom: 0.35rem; }
+.page-hero h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 1.45rem; font-weight: 700; color: white; margin-bottom: 0.2rem; }
 .page-hero p { font-size: 0.8rem; color: rgba(255,255,255,0.67); }
 
 /* ── BOTTOM NAV ── */
@@ -354,24 +360,24 @@ body::after {
   border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
 }
 
-/* ── Khatam LIST ROWS ── */
-.Khatam-row {
+/* ── KHATM LIST ROWS ── */
+.khatm-row {
   display: flex; align-items: center; gap: 0.9rem;
   padding: 1rem; background: var(--white); border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm); margin-bottom: 0.75rem;
   text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent;
   transition: transform 0.15s;
 }
-.Khatam-row:active { transform: scale(0.97); }
-.Khatam-row-icon {
+.khatm-row:active { transform: scale(0.97); }
+.khatm-row-icon {
   width: 46px; height: 46px; border-radius: 13px;
   background: var(--teal-soft); display: flex; align-items: center;
   justify-content: center; font-size: 1.2rem; color: var(--teal); flex-shrink: 0;
 }
-.Khatam-row-info { flex: 1; min-width: 0; }
-.Khatam-row-name { font-weight: 700; color: var(--text); font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.Khatam-row-meta { font-size: 0.72rem; color: var(--text-soft); margin-top: 0.12rem; }
-.Khatam-row-pct  { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--teal); flex-shrink: 0; }
+.khatm-row-info { flex: 1; min-width: 0; }
+.khatm-row-name { font-weight: 700; color: var(--text); font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.khatm-row-meta { font-size: 0.72rem; color: var(--text-soft); margin-top: 0.12rem; }
+.khatm-row-pct  { font-family: Georgia, 'Times New Roman', serif; font-size: 1.05rem; font-weight: 700; color: var(--teal); flex-shrink: 0; }
 
 /* ── ALERT ── */
 .alert {
