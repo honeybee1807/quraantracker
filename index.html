@@ -11,7 +11,7 @@
 
   <header class="app-header">
     <button class="header-btn" onclick="openDrawer()"><i class="fas fa-bars"></i></button>
-    <a href="index.html" class="header-logo"><img src="myquraantracker_logo.png" alt="My Quraan Tracker"></a>
+    <a href="index.html" class="header-logo"><img src="MQT_logo.png" alt="My Quraan Tracker"></a>
     <button class="header-btn" onclick="showHowModal()"><i class="fas fa-circle-question"></i></button>
   </header>
 
@@ -24,8 +24,8 @@
       </div>
       <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.88rem;color:var(--text-mid);line-height:1.65;">
         <div style="background:var(--teal-soft);border-radius:12px;padding:1rem;">
-          <strong style="color:var(--teal);">1️⃣ You create a Khatm</strong><br>
-          The app creates a special link that contains your entire Khatm.
+          <strong style="color:var(--teal);">1️⃣ You create a Khatam</strong><br>
+          The app creates a special link that contains your entire Khatam.
         </div>
         <div style="background:var(--gold-soft);border-radius:12px;padding:1rem;">
           <strong style="color:var(--gold-dark);">2️⃣ Share on WhatsApp</strong><br>
@@ -33,11 +33,11 @@
         </div>
         <div style="background:var(--teal-soft);border-radius:12px;padding:1rem;">
           <strong style="color:var(--teal);">3️⃣ Family claims paras</strong><br>
-          Anyone who opens the link sees the Khatm, enters their name, and claims their para.
+          Anyone who opens the link sees the Khatam, enters their name, and claims their para.
         </div>
         <div style="background:var(--gold-soft);border-radius:12px;padding:1rem;">
           <strong style="color:var(--gold-dark);">4️⃣ Share updates back</strong><br>
-          After claiming or completing, they tap <em>Share Update</em> to send the updated Khatm back to the group.
+          After claiming or completing, they tap <em>Share Update</em> to send the updated Khatam back to the group.
         </div>
         <div style="background:#f0f0f0;border-radius:12px;padding:1rem;">
           <strong style="color:var(--text);">✅ No sign-in. No database. No banking details.</strong><br>
@@ -51,12 +51,12 @@
   <div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
   <nav class="drawer" id="drawer">
     <div class="drawer-head">
-      <img src="myquraantracker_logo.png" alt="Logo">
+      <img src="MQT_logo.png" alt="Logo">
       <button class="drawer-close" onclick="closeDrawer()"><i class="fas fa-times"></i></button>
     </div>
     <div class="drawer-nav">
       <a href="index.html" class="active"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
-      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
+      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatam</a>
       <a href="zikr.html"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
       <a href="yaaseencounts.html"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
     </div>
@@ -66,22 +66,22 @@
   <div class="hero-banner fade-up">
     <div class="hero-arabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
     <h1 class="hero-title">My <em>Quraan</em> Tracker</h1>
-    <p class="hero-sub">Track your Khatm, count your Zikr, and worship together — simply.</p>
+    <p class="hero-sub">Track your Khatam, count your Zikr, and worship together — simply.</p>
   </div>
 
   <div class="page-body">
 
-    <div class="section-label">Quraan Khatm</div>
+    <div class="section-label">Quraan Khatam</div>
     <div class="card fade-up">
       <div class="card-stripe"></div>
       <div class="card-body">
         <div class="card-icon-row">
           <div class="card-icon teal"><i class="fas fa-book-quran"></i></div>
-          <div><div class="card-title">Start a Khatm</div></div>
+          <div><div class="card-title">Start a Khatam</div></div>
         </div>
-        <p class="card-desc">Create a group Khatm, share it on WhatsApp, and your family can claim and complete their paras. No account needed.</p>
-        <input type="text" id="khatmDesc" class="field" placeholder="Name your Khatm (e.g. For Dadi)…">
-        <button class="btn btn-primary" onclick="homeCreateKhatm()"><i class="fas fa-plus"></i> Create Khatm</button>
+        <p class="card-desc">Create a group Khatam, share it on WhatsApp, and your family can claim and complete their paras. No account needed.</p>
+        <input type="text" id="KhatamDesc" class="field" placeholder="Name your Khatam (e.g. Esale Sawaab)…">
+        <button class="btn btn-primary" onclick="homeCreateKhatam()"><i class="fas fa-plus"></i> Create Khatam</button>
         <div class="alert info" style="margin-top:0.75rem;margin-bottom:0;">
           <i class="fas fa-share-nodes"></i>
           <span>After creating, share the WhatsApp link with your family. No codes to type — they just tap the link.</span>
@@ -130,16 +130,16 @@
       </div>
     </div>
 
-    <div id="myKhatmsSection" style="display:none">
-      <div class="section-label">My Khatms</div>
-      <div id="myKhatmsList"></div>
+    <div id="myKhatamsSection" style="display:none">
+      <div class="section-label">My Khatams</div>
+      <div id="myKhatamsList"></div>
     </div>
 
   </div>
 
   <nav class="bottom-nav">
     <a href="index.html" class="active"><i class="fas fa-home"></i> Home</a>
-    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatm</a>
+    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatam</a>
     <a href="zikr.html"><i class="fas fa-infinity"></i> Zikr</a>
     <a href="yaaseencounts.html"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
   </nav>
@@ -149,15 +149,15 @@
     function showHowModal()  { document.getElementById('howModal').style.display = 'flex'; }
     function closeHowModal() { document.getElementById('howModal').style.display = 'none'; }
 
-    function homeCreateKhatm() {
-      const desc = document.getElementById('khatmDesc').value.trim();
-      if (!desc) { alert('Please enter a name for your Khatm.'); return; }
-      const khatm = {
+    function homeCreateKhatam() {
+      const desc = document.getElementById('KhatamDesc').value.trim();
+      if (!desc) { alert('Please enter a name for your Khatam.'); return; }
+      const Khatam = {
         code: generateCode(), description: desc, createdAt: new Date().toISOString(),
         paras: Array.from({length:30}, (_,i) => ({ number: i+1, assignedTo:'', completed:false }))
       };
-      saveKhatmLocal(khatm);
-      const encoded = encodeKhatm(khatm);
+      saveKhatamLocal(Khatam);
+      const encoded = encodeKhatam(Khatam);
       window.location.href = 'quraan.html?k=' + encoded;
     }
 
