@@ -54,8 +54,29 @@ function buildZikrShareLink(zikr) {
   return `${APP_DOMAIN}/zikr.html?z=${encoded}`;
 }
 
-function whatsappShare(text, url) {
-  const msg = encodeURIComponent(`${text}\n\n${url}`);
+// Shorten a URL using TinyURL (free, no signup, no API key)
+async function shortenUrl(longUrl) {
+  try {
+    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+    if (res.ok) {
+      const short = await res.text();
+      if (short.startsWith('https://tinyurl.com/')) return short;
+    }
+  } catch(e) { /* fall through to long URL */ }
+  return longUrl; // fallback to full URL if shortener fails
+}
+
+// Share on WhatsApp — shortens link first so it's clean and clickable
+async function whatsappShare(text, url) {
+  // Show a brief "preparing..." state on the button
+  const btns = document.querySelectorAll('[onclick*="WhatsApp"]');
+  btns.forEach(b => { b._orig = b.innerHTML; b.innerHTML = '⏳ Preparing…'; b.disabled = true; });
+
+  const shortUrl = await shortenUrl(url);
+
+  btns.forEach(b => { b.innerHTML = b._orig; b.disabled = false; });
+
+  const msg = encodeURIComponent(`${text}\n${shortUrl}`);
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
 
@@ -189,7 +210,8 @@ function markDone(num) {
 function shareKhatmWhatsApp() {
   if (!activeKhatm) return;
   const link = buildKhatmShareLink(activeKhatm);
-  const msg  = `📖 *${activeKhatm.description}* — Quraan Khatm\nJoin us and claim your para:\n`;
+  const done = activeKhatm.paras.filter(p => p.completed).length;
+  const msg  = `📖 *${activeKhatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
   whatsappShare(msg, link);
 }
 
@@ -314,7 +336,7 @@ function saveZikrSession() {
 function shareZikrWhatsApp() {
   if (!currentZikr) return;
   const link = buildZikrShareLink(currentZikr);
-  const msg  = `🤲 *${currentZikr.description}* — Zikr Counter\nJoin and add your count:\n`;
+  const msg  = `🤲 *${currentZikr.description}* — Group Zikr\nTotal: ${currentZikr.total}/${currentZikr.target}. Tap to join:`;
   whatsappShare(msg, link);
 }
 
@@ -422,7 +444,7 @@ function shareYaaseenWhatsApp() {
   if (!currentYaaseen) return;
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(currentYaaseen))));
   const url = `${APP_DOMAIN}/yaaseencounts.html?y=${encoded}`;
-  const msg = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nJoin and add your count:\n`;
+  const msg = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nTotal: ${currentYaaseen.total}/${currentYaaseen.target}. Tap to join:`;
   whatsappShare(msg, url);
 }
 
