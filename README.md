@@ -190,7 +190,7 @@ This app was built **for the pleasure of Allah** to make it easier for Muslim fa
 
 <div align="center">
 
-Made with 🤍 in Estcourt, KwaZulu-Natal, South Africa
+Made with 🤍 in South Africa
 
 **بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ**
 
