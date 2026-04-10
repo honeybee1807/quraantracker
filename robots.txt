@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://myquraantracker.netlify.app/sitemap.xml
