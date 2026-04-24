@@ -4,190 +4,1225 @@
   <meta charset="UTF-8">
   <title>My Quraan Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
-  <!-- Basic SEO -->
-<meta name="description" content="Track your Quraan Khatm and Zikr counts with family and friends — simple, free, no app needed.">
-<meta name="keywords" content="quran khatm tracker, zikr counter, islamic app, khatm group">
-<meta name="author" content="Olideen Technologies">
+  <meta name="description" content="Track your Quraan Khatm and Zikr with family — simple, free, no app needed.">
+  <meta property="og:title" content="My Quraan Tracker">
+  <meta property="og:description" content="Organise your group Khatm and Zikr counts in one place.">
+  <meta property="og:image" content="https://myquraantracker.netlify.app/MQT_logo.png">
+  <meta property="og:url" content="https://myquraantracker.netlify.app">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Open Graph (makes WhatsApp/Facebook previews look good) -->
-<meta property="og:title" content="My Quraan Tracker">
-<meta property="og:description" content="Organise your group Khatm and Zikr counts in one place.">
-<meta property="og:image" content="https://myquraantracker.netlify.app/MQT_logo.png">
-<meta property="og:url" content="https://myquraantracker.netlify.app">
-<meta property="og:type" content="website">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<!-- Twitter/X card -->
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="My Quraan Tracker">
-<meta name="twitter:description" content="Organise your group Khatm and Zikr counts in one place.">
+    :root {
+      --teal:        #0D4A3E;
+      --teal-mid:    #155c4e;
+      --teal-soft:   #e8f2f0;
+      --gold:        #C9A84C;
+      --gold-dark:   #a07a28;
+      --gold-soft:   #fdf6e3;
+      --cream:       #FAF7F2;
+      --cream-dark:  #f0ebe0;
+      --border:      #e4ddd0;
+      --text:        #1c1c1c;
+      --text-mid:    #444;
+      --text-soft:   #888;
+      --white:       #ffffff;
+      --green-wa:    #25D366;
+      --radius-lg:   18px;
+      --radius-md:   12px;
+      --radius-sm:   8px;
+      --shadow:      0 2px 20px rgba(13,74,62,0.08);
+      --shadow-card: 0 1px 8px rgba(0,0,0,0.06);
+    }
 
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 40px;
+    }
+
+    /* ── HEADER ── */
+    .app-header {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .app-header img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+
+    .app-header h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: -0.3px;
+    }
+
+    .app-header h1 span {
+      color: var(--gold);
+      font-style: italic;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      width: 100%;
+      max-width: 480px;
+      padding: 18px 20px 20px;
+      text-align: center;
+    }
+
+    .hero-arabic {
+      font-family: 'Amiri', serif;
+      font-size: 1.25rem;
+      color: var(--teal);
+      opacity: 0.7;
+      direction: rtl;
+      margin-bottom: 4px;
+    }
+
+    .hero-sub {
+      font-size: 0.82rem;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+
+    /* ── MAIN BODY ── */
+    .page-body {
+      width: 100%;
+      max-width: 480px;
+      padding: 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── TOOL ACCORDION ── */
+    .tool {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      border: 1.5px solid var(--border);
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .tool.open {
+      border-color: var(--gold);
+      box-shadow: var(--shadow);
+    }
+
+    .tool-trigger {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tool-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .tool-icon.teal { background: var(--teal-soft); }
+    .tool-icon.gold { background: var(--gold-soft); }
+
+    .tool-info { flex: 1; }
+
+    .tool-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--teal);
+      line-height: 1.2;
+    }
+
+    .tool-name.gold-name { color: var(--gold-dark); }
+
+    .tool-tagline {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    .tool-chevron {
+      font-size: 0.75rem;
+      color: var(--gold);
+      transition: transform 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .tool.open .tool-chevron { transform: rotate(180deg); }
+
+    /* ── TOOL CONTENT ── */
+    .tool-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.38s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .tool.open .tool-content { max-height: 3000px; }
+
+    .tool-inner {
+      padding: 4px 18px 20px;
+      border-top: 1px solid var(--cream-dark);
+    }
+
+    /* ── ARABIC VERSE IN TOOL ── */
+    .tool-arabic {
+      font-family: 'Amiri', serif;
+      font-size: 1rem;
+      color: var(--teal);
+      opacity: 0.6;
+      direction: rtl;
+      text-align: center;
+      padding: 10px 0 6px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 0 2px;
+    }
+
+    /* ── INPUTS ── */
+    .field {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--text);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 8px;
+    }
+
+    .field:focus { border-color: var(--gold); }
+    .field::placeholder { color: var(--text-soft); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      text-decoration: none;
+      margin-bottom: 6px;
+    }
+
+    .btn:active { opacity: 0.82; transform: scale(0.98); }
+
+    .btn-teal  { background: var(--teal);     color: #fff; }
+    .btn-gold  { background: var(--gold);     color: #fff; }
+    .btn-wa    { background: var(--green-wa); color: #fff; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--teal);
+      border: 1.5px solid var(--border);
+      width: auto;
+      flex: 1;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .btn-row .btn { margin-bottom: 0; }
+
+    /* ── PROGRESS ── */
+    .progress-wrap {
+      height: 7px;
+      background: var(--cream-dark);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 10px 0 4px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--teal);
+      border-radius: 99px;
+      transition: width 0.5s ease;
+    }
+
+    .progress-fill.gold { background: var(--gold); }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.73rem;
+      color: var(--text-soft);
+      margin-bottom: 10px;
+    }
+
+    /* ── KHATM INFO BLOCK ── */
+    .khatm-info-title {
+      font-family: 'Amiri', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin: 10px 0 2px;
+    }
+
+    /* ── PARAS GRID ── */
+    .paras-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin: 10px 0;
+    }
+
+    .para-tile {
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.12s, opacity 0.12s;
+      -webkit-tap-highlight-color: transparent;
+      border: 1.5px solid transparent;
+    }
+
+    .para-tile:active { transform: scale(0.94); }
+
+    .para-tile.available {
+      background: var(--teal-soft);
+      border-color: rgba(13,74,62,0.12);
+    }
+
+    .para-tile.assigned {
+      background: var(--gold-soft);
+      border-color: rgba(201,168,76,0.25);
+    }
+
+    .para-tile.completed {
+      background: var(--teal);
+      cursor: default;
+    }
+
+    .para-num {
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: block;
+    }
+
+    .para-tile.available  .para-num { color: var(--teal); }
+    .para-tile.assigned   .para-num { color: var(--gold-dark); }
+    .para-tile.completed  .para-num { color: rgba(255,255,255,0.7); }
+
+    .para-name {
+      font-size: 0.58rem;
+      display: block;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+
+    .para-tile.available  .para-name { color: var(--teal-mid); }
+    .para-tile.assigned   .para-name { color: var(--gold-dark); }
+    .para-tile.completed  .para-name { color: rgba(255,255,255,0.6); }
+
+    .para-who {
+      font-size: 0.6rem;
+      font-weight: 600;
+      display: block;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .para-tile.assigned  .para-who { color: var(--gold-dark); }
+    .para-tile.completed .para-who { color: #fff; }
+
+    .para-tick {
+      font-size: 0.9rem;
+      color: var(--gold);
+      display: block;
+    }
+
+    /* ── TAP ZONE ── */
+    .tap-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 0 12px;
+    }
+
+    .big-number {
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--teal);
+      line-height: 1;
+      transition: transform 0.12s;
+    }
+
+    .big-number.gold-num { color: var(--gold-dark); }
+    .big-number.pop { transform: scale(1.18); }
+
+    .tap-circle {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: none;
+      background: var(--teal);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.1s, opacity 0.1s;
+      box-shadow: 0 4px 18px rgba(13,74,62,0.3);
+    }
+
+    .tap-circle:active { transform: scale(0.91); opacity: 0.85; }
+    .tap-circle.gold-tap { background: var(--gold); box-shadow: 0 4px 18px rgba(201,168,76,0.35); }
+
+    .tap-circle-icon { font-size: 1.3rem; }
+
+    /* ── STAT ROW ── */
+    .stat-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .stat-pill {
+      flex: 1;
+      border-radius: var(--radius-md);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .teal-pill { background: var(--teal-soft); }
+    .gold-pill  { background: var(--gold-soft); }
+
+    .stat-val {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--teal);
+      display: block;
+    }
+
+    .stat-val.gold-val { color: var(--gold-dark); }
+
+    .stat-lbl {
+      font-size: 0.68rem;
+      color: var(--text-soft);
+    }
+
+    /* ── CONTRIBUTIONS ── */
+    .contrib-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--cream-dark);
+      font-size: 0.85rem;
+    }
+
+    .contrib-item:last-child { border-bottom: none; }
+
+    .contrib-name { font-weight: 600; color: var(--text); }
+
+    .contrib-count {
+      font-weight: 700;
+      color: var(--teal);
+      background: var(--teal-soft);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.8rem;
+    }
+
+    /* ── SUCCESS BANNER ── */
+    .success-banner {
+      background: var(--teal);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .success-banner .arabic {
+      font-family: 'Amiri', serif;
+      font-size: 1.4rem;
+      opacity: 0.8;
+      display: block;
+      direction: rtl;
+    }
+
+    .success-banner h3 { font-size: 1rem; margin: 4px 0 2px; }
+    .success-banner p  { font-size: 0.8rem; opacity: 0.8; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 18px 0 8px;
+      color: var(--text-soft);
+      font-size: 0.82rem;
+    }
+
+    /* ── INFO NOTE ── */
+    .note {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      text-align: center;
+      padding: 4px 0 8px;
+      line-height: 1.5;
+    }
+
+    /* ── KHATM LIST ROWS ── */
+    .khatm-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--cream-dark);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .khatm-row:last-child { border-bottom: none; }
+
+    .khatm-row-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--teal-soft);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: var(--teal);
+      flex-shrink: 0;
+    }
+
+    .khatm-row-name { font-size: 0.88rem; font-weight: 600; color: var(--teal); }
+    .khatm-row-meta { font-size: 0.73rem; color: var(--text-soft); margin-top: 1px; }
+    .khatm-row-pct  { font-size: 0.8rem; font-weight: 700; color: var(--gold-dark); margin-left: auto; flex-shrink: 0; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: var(--cream-dark);
+      margin: 4px 0 6px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      padding: 24px 20px 0;
+      font-size: 0.73rem;
+      color: var(--text-soft);
+      line-height: 1.7;
+    }
+
+    footer strong { color: var(--teal); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-up { animation: fadeUp 0.4s ease both; }
+  </style>
 </head>
 <body>
 
-  <header class="app-header">
-    <button class="header-btn" onclick="openDrawer()"><i class="fas fa-bars"></i></button>
-    <a href="index.html" class="header-logo"><img src="MQT_logo.png" alt="My Quraan Tracker"></a>
-    <button class="header-btn" onclick="showHowModal()"><i class="fas fa-circle-question"></i></button>
+  <!-- HEADER -->
+  <header class="app-header fade-up">
+    <img src="MQT_logo.png" alt="My Quraan Tracker Logo">
+    <h1>My <span>Quraan</span> Tracker</h1>
   </header>
 
-  <!-- HOW IT WORKS MODAL -->
-  <div id="howModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;padding:1.25rem;align-items:flex-end;justify-content:center;">
-    <div style="background:white;border-radius:24px 24px 24px 24px;padding:1.75rem;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;">
-        <div style="font-family:Georgia,'Times New Roman',serif;font-size:1.2rem;font-weight:700;color:var(--teal);">How Sharing Works</div>
-        <button onclick="closeHowModal()" style="background:var(--cream-dark);border:none;width:32px;height:32px;border-radius:50%;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.88rem;color:var(--text-mid);line-height:1.65;">
-        <div style="background:var(--teal-soft);border-radius:12px;padding:1rem;">
-          <strong style="color:var(--teal);">1️⃣ You create a Khatm</strong><br>
-          The app creates a special link that contains your entire Khatm.
-        </div>
-        <div style="background:var(--gold-soft);border-radius:12px;padding:1rem;">
-          <strong style="color:var(--gold-dark);">2️⃣ Share on WhatsApp</strong><br>
-          Tap the green <em>Share on WhatsApp</em> button. The link goes straight to your family group.
-        </div>
-        <div style="background:var(--teal-soft);border-radius:12px;padding:1rem;">
-          <strong style="color:var(--teal);">3️⃣ Family claims paras</strong><br>
-          Anyone who opens the link sees the Khatm, enters their name, and claims their para.
-        </div>
-        <div style="background:var(--gold-soft);border-radius:12px;padding:1rem;">
-          <strong style="color:var(--gold-dark);">4️⃣ Share updates back</strong><br>
-          After claiming or completing, they tap <em>Share Update</em> to send the updated Khatm back to the group.
-        </div>
-        <div style="background:#f0f0f0;border-radius:12px;padding:1rem;">
-          <strong style="color:var(--text);">✅ No sign-in. No database. No banking details.</strong><br>
-          Everything is in the link. It works like passing a piece of paper around — except on WhatsApp.
-        </div>
-      </div>
-      <button onclick="closeHowModal()" class="btn btn-primary" style="margin-top:1.1rem;">Got it!</button>
-    </div>
-  </div>
-
-  <div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
-  <nav class="drawer" id="drawer">
-    <div class="drawer-head">
-      <img src="MQT_logo.png" alt="Logo">
-      <button class="drawer-close" onclick="closeDrawer()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="drawer-nav">
-      <a href="index.html" class="active"><span class="nav-icon"><i class="fas fa-home"></i></span> Home</a>
-      <a href="quraan.html"><span class="nav-icon"><i class="fas fa-book-open"></i></span> Quraan Khatm</a>
-      <a href="zikr.html"><span class="nav-icon"><i class="fas fa-infinity"></i></span> Zikr Counter</a>
-      <a href="yaaseencounts.html"><span class="nav-icon"><i class="fas fa-star-and-crescent"></i></span> Yaaseen Counter</a>
-    </div>
-    <div class="drawer-footer">For the pleasure of Allah<br>By Olideen Technologies</div>
-  </nav>
-
-  <div class="hero-banner fade-up">
+  <!-- HERO -->
+  <div class="hero fade-up">
     <div class="hero-arabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
-    <h1 class="hero-title">My <em>Quraan</em> Tracker</h1>
-    <p class="hero-sub">Track your Khatm, count your Zikr, and worship together — simply.</p>
+    <div class="hero-sub">Track your Khatm, count your Zikr, and worship together — simply.</div>
   </div>
 
-  <div class="page-body">
+  <!-- MAIN -->
+  <main class="page-body">
 
-    <div class="section-label">Quraan Khatm</div>
-    <div class="card fade-up">
-      <div class="card-stripe"></div>
-      <div class="card-body">
-        <div class="card-icon-row">
-          <div class="card-icon teal"><i class="fas fa-book-quran"></i></div>
-          <div><div class="card-title">Start a Khatm</div></div>
+    <!-- ══ TOOL 1 — QURAAN KHATM ══ -->
+    <div class="tool fade-up" id="tool-khatm">
+      <div class="tool-trigger" onclick="toggleTool('khatm')">
+        <div class="tool-icon teal">📖</div>
+        <div class="tool-info">
+          <div class="tool-name">Quraan Khatm</div>
+          <div class="tool-tagline">Group para tracker — share on WhatsApp</div>
         </div>
-        <p class="card-desc">Create a group Khatm, share it on WhatsApp, and your family can claim and complete their paras. No account needed.</p>
-        <input type="text" id="khatmDesc" class="field" placeholder="e.g. Esale Sawaab…">
-        <button class="btn btn-primary" onclick="homeCreateKhatm()"><i class="fas fa-plus"></i> Create Khatm</button>
-        <div class="alert info" style="margin-top:0.75rem;margin-bottom:0;">
-          <i class="fas fa-share-nodes"></i>
-          <span>After creating, share the WhatsApp link with your family. No codes to type — they just tap the link.</span>
-        </div>
+        <div class="tool-chevron">▼</div>
       </div>
-    </div>
+      <div class="tool-content">
+        <div class="tool-inner" id="khatm-inner">
 
-    <div class="section-label">Zikr & Durood</div>
-    <div class="card fade-up-2">
-      <div class="card-stripe gold"></div>
-      <div class="card-body">
-        <div class="card-icon-row">
-          <div class="card-icon gold"><i class="fas fa-infinity"></i></div>
-          <div><div class="card-title gold-text">Count Zikr Together</div></div>
-        </div>
-        <p class="card-desc">Set a group target for Durood, Tasbeeh or any Zikr. Share the link and track everyone's contributions.</p>
-        <input type="text" id="zikrDesc" class="field" placeholder="What are you counting? (e.g. Durood Ibrahim)…">
-        <input type="number" id="zikrTarget" class="field" placeholder="Target count (e.g. 1000)…">
-        <button class="btn btn-gold" onclick="homeCreateZikr()"><i class="fas fa-plus"></i> Create Counter</button>
-      </div>
-    </div>
-
-    <div class="section-label">Quick Tools</div>
-    <div class="card fade-up-3">
-      <div class="card-body" style="padding:1rem;">
-        <a href="zikr.html" style="text-decoration:none;">
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid var(--border);">
-            <div class="card-icon teal" style="width:42px;height:42px;border-radius:12px;font-size:1.1rem;"><i class="fas fa-hand-dots"></i></div>
-            <div>
-              <div style="font-weight:700;color:var(--teal);font-size:0.95rem;">Tasbeeh Counter</div>
-              <div style="font-size:0.78rem;color:var(--text-soft);">Tap to count — no setup needed</div>
+          <!-- STATE A: create form -->
+          <div id="khatm-form">
+            <div class="tool-arabic">وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</div>
+            <div class="divider"></div>
+            <input type="text" class="field" id="khatmDesc" placeholder="Name your Khatm (e.g. Esale Sawaab)…">
+            <button class="btn btn-teal" onclick="createKhatm()">Create Khatm</button>
+            <div id="myKhatmsWrap" style="display:none">
+              <div class="section-label" style="margin-top:8px;">My Previous Khatms</div>
+              <div id="myKhatmsList"></div>
             </div>
-            <i class="fas fa-chevron-right" style="color:var(--border);margin-left:auto;"></i>
           </div>
-        </a>
-        <a href="yaaseencounts.html" style="text-decoration:none;">
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;">
-            <div class="card-icon gold" style="width:42px;height:42px;border-radius:12px;font-size:1.1rem;"><i class="fas fa-star-and-crescent"></i></div>
-            <div>
-              <div style="font-weight:700;color:var(--gold-dark);font-size:0.95rem;">Yaaseen Counter</div>
-              <div style="font-size:0.78rem;color:var(--text-soft);">Track group Yaaseen recitations</div>
+
+          <!-- STATE B: khatm view -->
+          <div id="khatm-view" style="display:none">
+            <div id="khatm-complete-banner" class="success-banner" style="display:none; margin-top:8px;">
+              <span class="arabic">اَلْحَمْدُ لِلَّه</span>
+              <h3>Khatm Complete! 🤲</h3>
+              <p>May Allah accept it from everyone. Ameen.</p>
             </div>
-            <i class="fas fa-chevron-right" style="color:var(--border);margin-left:auto;"></i>
+            <div class="khatm-info-title" id="khatm-view-title"></div>
+            <div class="progress-wrap">
+              <div class="progress-fill" id="khatm-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-meta">
+              <span id="khatm-progress-text">0 of 30 paras done</span>
+              <span id="khatm-progress-pct">0%</span>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-wa" style="flex:1;margin-bottom:0;" onclick="shareKhatmWhatsApp()">Share on WhatsApp</button>
+              <button class="btn btn-ghost" id="copyKhatmBtn" onclick="copyKhatmLink()">Copy</button>
+            </div>
+            <p class="note">Share again after any update so everyone sees the latest.</p>
+            <input type="text" class="field" id="khatm-name" placeholder="Your name…">
+            <div class="section-label">30 Paras — tap to claim yours</div>
+            <div class="paras-grid" id="paras-grid"></div>
+            <button class="btn btn-wa" style="margin-top:4px;" onclick="shareKhatmWhatsApp()">Share Updated Khatm</button>
+            <button class="btn btn-ghost" style="width:100%;margin-top:4px;padding:10px;" onclick="resetKhatm()">← Start New Khatm</button>
           </div>
-        </a>
+
+        </div>
       </div>
     </div>
 
-    <div id="myKhatmsSection" style="display:none">
-      <div class="section-label">My Khatms</div>
-      <div id="myKhatmsList"></div>
+    <!-- ══ TOOL 2 — ZIKR / DUROOD ══ -->
+    <div class="tool fade-up" id="tool-zikr">
+      <div class="tool-trigger" onclick="toggleTool('zikr')">
+        <div class="tool-icon gold">🤲</div>
+        <div class="tool-info">
+          <div class="tool-name gold-name">Zikr & Durood</div>
+          <div class="tool-tagline">Quick tasbeeh or group counter</div>
+        </div>
+        <div class="tool-chevron">▼</div>
+      </div>
+      <div class="tool-content">
+        <div class="tool-inner">
+          <div class="tool-arabic">اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا</div>
+          <div class="divider"></div>
+
+          <!-- Quick standalone tasbeeh -->
+          <div class="section-label">Quick Tasbeeh</div>
+          <div class="tap-zone" style="padding:12px 0 8px;">
+            <div class="big-number gold-num" id="standalone-count">0</div>
+            <button class="tap-circle gold-tap" onclick="tapStandalone()">
+              <span class="tap-circle-icon">☝️</span>
+              TAP
+            </button>
+          </div>
+          <div class="stat-row">
+            <div class="stat-pill gold-pill">
+              <span class="stat-val gold-val" id="standalone-session">0</span>
+              <span class="stat-lbl">This Session</span>
+            </div>
+            <div class="stat-pill teal-pill">
+              <span class="stat-val" id="standalone-saved">0</span>
+              <span class="stat-lbl">Total Saved</span>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-gold" style="flex:1;margin-bottom:0;" onclick="saveStandalone()">Save</button>
+            <button class="btn btn-ghost" onclick="resetStandalone()">Reset</button>
+          </div>
+
+          <div class="divider" style="margin:14px 0 10px;"></div>
+
+          <!-- Group counter -->
+          <div class="section-label">Group Counter</div>
+
+          <!-- GROUP: create form -->
+          <div id="zikr-form">
+            <input type="text" class="field" id="zikr-desc" placeholder="What are you counting? (e.g. Durood Ibrahim)…">
+            <input type="number" class="field" id="zikr-target" placeholder="Target (e.g. 1000)…">
+            <button class="btn btn-teal" onclick="createZikr()">Create Group Counter</button>
+          </div>
+
+          <!-- GROUP: zikr view -->
+          <div id="zikr-view" style="display:none">
+            <div style="font-family:'Amiri',serif;font-size:1.1rem;font-weight:700;color:var(--gold-dark);margin-bottom:6px;" id="zikr-view-title"></div>
+            <div class="progress-wrap">
+              <div class="progress-fill gold" id="zikr-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-meta">
+              <span>Total: <strong id="zikr-total" style="color:var(--teal);">0</strong></span>
+              <span id="zikr-pct">0%</span>
+              <span>Target: <strong id="zikr-target-display" style="color:var(--gold-dark);">0</strong></span>
+            </div>
+            <div class="tap-zone" style="padding:12px 0 8px;">
+              <div class="big-number" id="zikr-session-count">0</div>
+              <button class="tap-circle" onclick="tapZikr()">
+                <span class="tap-circle-icon">☝️</span>
+                TAP
+              </button>
+            </div>
+            <input type="text" class="field" id="zikr-name" placeholder="Your name…" style="text-align:center;">
+            <button class="btn btn-teal" onclick="saveZikrSession()">Save My Count</button>
+            <button class="btn btn-wa" onclick="shareZikrWhatsApp()">Share on WhatsApp</button>
+            <p class="note">Share after saving so your family sees your updated count.</p>
+            <div class="section-label">Contributions</div>
+            <div id="zikr-contributions">
+              <div class="empty-state">No contributions yet — be the first!</div>
+            </div>
+            <button class="btn btn-ghost" style="width:100%;margin-top:8px;padding:10px;" onclick="resetZikr()">← New Group Counter</button>
+          </div>
+
+        </div>
+      </div>
     </div>
 
-  </div>
+    <!-- ══ TOOL 3 — YAASEEN ══ -->
+    <div class="tool fade-up" id="tool-yaaseen">
+      <div class="tool-trigger" onclick="toggleTool('yaaseen')">
+        <div class="tool-icon teal">⭐</div>
+        <div class="tool-info">
+          <div class="tool-name">Yaaseen Counter</div>
+          <div class="tool-tagline">Track Surah Yaaseen recitations</div>
+        </div>
+        <div class="tool-chevron">▼</div>
+      </div>
+      <div class="tool-content">
+        <div class="tool-inner">
+          <div class="tool-arabic">يٰسٓ ۚ وَالْقُرْاٰنِ الْحَكِيْمِ</div>
+          <div class="divider"></div>
 
-  <nav class="bottom-nav">
-    <a href="index.html" class="active"><i class="fas fa-home"></i> Home</a>
-    <a href="quraan.html"><i class="fas fa-book-open"></i> Khatm</a>
-    <a href="zikr.html"><i class="fas fa-infinity"></i> Zikr</a>
-    <a href="yaaseencounts.html"><i class="fas fa-star-and-crescent"></i> Yaaseen</a>
-  </nav>
+          <!-- YAASEEN: create form -->
+          <div id="yaaseen-form">
+            <input type="text" class="field" id="yaaseen-desc" placeholder="Intention (e.g. Esale Sawaab)…">
+            <input type="number" class="field" id="yaaseen-target" placeholder="Target (e.g. 41, 100)…">
+            <button class="btn btn-teal" onclick="createYaaseen()">Create Yaaseen Counter</button>
+          </div>
 
-  <script src="script.js"></script>
-  <script>
-    function showHowModal()  { document.getElementById('howModal').style.display = 'flex'; }
-    function closeHowModal() { document.getElementById('howModal').style.display = 'none'; }
+          <!-- YAASEEN: view -->
+          <div id="yaaseen-view" style="display:none">
+            <div style="font-family:'Amiri',serif;font-size:1.1rem;font-weight:700;color:var(--teal);margin-bottom:6px;" id="yaaseen-view-title"></div>
+            <div class="progress-wrap">
+              <div class="progress-fill" id="yaaseen-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-meta">
+              <span>Total: <strong id="yaaseen-total" style="color:var(--teal);">0</strong></span>
+              <span>Target: <strong id="yaaseen-target-display" style="color:var(--gold-dark);">0</strong></span>
+            </div>
+            <p class="note" style="padding-top:4px;">Each tap = one full Surah Yaaseen</p>
+            <div class="tap-zone" style="padding:12px 0 8px;">
+              <div class="big-number" id="yaaseen-session">0</div>
+              <button class="tap-circle" onclick="tapYaaseen()">
+                <span class="tap-circle-icon">⭐</span>
+                TAP
+              </button>
+            </div>
+            <input type="text" class="field" id="yaaseen-name" placeholder="Your name…" style="text-align:center;">
+            <button class="btn btn-teal" onclick="saveYaaseenSession()">Save My Count</button>
+            <button class="btn btn-wa" onclick="shareYaaseenWhatsApp()">Share on WhatsApp</button>
+            <p class="note">Share after saving so your family sees your updated count.</p>
+            <div class="section-label">Contributions</div>
+            <div id="yaaseen-contributions">
+              <div class="empty-state">No contributions yet — be the first!</div>
+            </div>
+            <button class="btn btn-ghost" style="width:100%;margin-top:8px;padding:10px;" onclick="resetYaaseen()">← New Yaaseen Counter</button>
+          </div>
 
-    function homeCreateKhatm() {
-      const desc = document.getElementById('khatmDesc').value.trim();
-      if (!desc) { alert('Please enter a name for your Khatm.'); return; }
-      const khatm = {
-        code: generateCode(), description: desc, createdAt: new Date().toISOString(),
-        paras: Array.from({length:30}, (_,i) => ({ number: i+1, assignedTo:'', completed:false }))
-      };
+        </div>
+      </div>
+    </div>
+
+    <!-- MY PREVIOUS KHATMS (home level) — rendered by JS if localStorage has data -->
+    <div id="home-khatms-section" style="display:none;">
+      <div class="section-label" style="padding: 6px 2px 4px;">My Khatms</div>
+      <div class="tool">
+        <div class="tool-inner" style="padding:4px 18px 14px;">
+          <div id="home-khatms-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+    
+  <footer>
+      For the pleasure of Allah<br>
+      <strong>
+        <a href="https://olideentech.co.za/" target="_blank" rel="noopener noreferrer">
+          By Olideen Technologies
+        </a>
+      </strong>
+    </footer>
+
+
+<script>
+/* =============================================
+   MY QURAAN TRACKER — single page
+   All tools inline, same URL encoding as before
+   ============================================= */
+
+const PARA_NAMES = [
+  "Alif Lam Meem","Sayaqool","Tilkar Rusul","Lan Tana Loo",
+  "Wal Mohsanat","La Yuhibbullah","Wa Iza Samiu","Wa Lau Annana",
+  "Qalal Malao","Wa A'lamu","Ya'tazeroon","Wa Ma Min Dabbah",
+  "Wa Ma Ubarri-u","Rubama","Subhanalazi","Qal Alam","Iqtaraba",
+  "Qad Aflaha","Wa Qalallazina","A'man Khalaq","Utlu Ma Oohi-a",
+  "Wa Man Yaqnut","Wa Mali-ya","Faman Azlamu","Elahe Yuraddu",
+  "Ha Meem","Qala Fama Khatbukum","Qad Sami Allah","Tabarakallazi","Amma"
+];
+
+const APP_DOMAIN = 'https://myquraantracker.netlify.app';
+
+// ── HELPERS ──────────────────────────────────
+function getParam(n) { return new URLSearchParams(window.location.search).get(n); }
+function encodeData(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+function decodeData(str) {
+  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); } catch(e) { return null; }
+}
+function generateCode() { return Math.random().toString(36).substring(2,7).toUpperCase(); }
+
+async function shortenUrl(longUrl) {
+  try {
+    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+    if (res.ok) { const s = await res.text(); if (s.startsWith('https://tinyurl.com/')) return s; }
+  } catch(e) {}
+  return longUrl;
+}
+
+async function whatsappShare(text, url) {
+  const btns = document.querySelectorAll('.btn-wa');
+  btns.forEach(b => { b._orig = b.innerHTML; b.innerHTML = '⏳ Preparing…'; b.disabled = true; });
+  const short = await shortenUrl(url);
+  btns.forEach(b => { b.innerHTML = b._orig; b.disabled = false; });
+  window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + short)}`, '_blank');
+}
+
+function saveKhatmLocal(khatm) {
+  const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+  const idx = all.findIndex(k => k.code === khatm.code);
+  if (idx >= 0) all[idx] = khatm; else all.push(khatm);
+  localStorage.setItem('mqt_khatms', JSON.stringify(all));
+}
+
+// ── TOOL ACCORDION ──────────────────────────
+function toggleTool(name) {
+  const el = document.getElementById('tool-' + name);
+  const isOpen = el.classList.contains('open');
+  // close all
+  document.querySelectorAll('.tool').forEach(t => t.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+
+// ── KHATM ────────────────────────────────────
+let activeKhatm = null;
+
+function createKhatm() {
+  const desc = document.getElementById('khatmDesc').value.trim();
+  if (!desc) { alert('Please enter a name for your Khatm.'); return; }
+  const khatm = {
+    code: generateCode(), description: desc,
+    createdAt: new Date().toISOString(),
+    paras: Array.from({length:30},(_,i) => ({ number:i+1, assignedTo:'', completed:false }))
+  };
+  activeKhatm = khatm;
+  saveKhatmLocal(khatm);
+  const encoded = encodeData(khatm);
+  window.history.replaceState({}, '', `?k=${encoded}`);
+  showKhatmView(khatm);
+}
+
+function showKhatmView(khatm) {
+  document.getElementById('khatm-form').style.display = 'none';
+  document.getElementById('khatm-view').style.display = 'block';
+  renderKhatm(khatm);
+}
+
+function resetKhatm() {
+  activeKhatm = null;
+  window.history.replaceState({}, '', window.location.pathname);
+  document.getElementById('khatm-form').style.display = 'block';
+  document.getElementById('khatm-view').style.display = 'none';
+  document.getElementById('khatmDesc').value = '';
+  loadMyKhatms();
+}
+
+function renderKhatm(khatm) {
+  document.getElementById('khatm-view-title').textContent = khatm.description;
+  const done = khatm.paras.filter(p => p.completed).length;
+  const pct  = Math.round((done/30)*100);
+  document.getElementById('khatm-progress-fill').style.width = pct + '%';
+  document.getElementById('khatm-progress-text').textContent = `${done} of 30 paras done`;
+  document.getElementById('khatm-progress-pct').textContent  = pct + '%';
+  document.getElementById('khatm-complete-banner').style.display = done===30 ? 'block' : 'none';
+  const encoded = encodeData(khatm);
+  window.history.replaceState({}, '', `?k=${encoded}`);
+  const grid = document.getElementById('paras-grid');
+  grid.innerHTML = khatm.paras.map(para => {
+    if (para.completed) return `
+      <div class="para-tile completed">
+        <span class="para-num">${para.number}</span>
+        <span class="para-name">${PARA_NAMES[para.number-1]}</span>
+        <span class="para-tick">✓</span>
+        <span class="para-who">${para.assignedTo}</span>
+      </div>`;
+    if (para.assignedTo) return `
+      <div class="para-tile assigned" onclick="markParaDone(${para.number})">
+        <span class="para-num">${para.number}</span>
+        <span class="para-name">${PARA_NAMES[para.number-1]}</span>
+        <span class="para-who">${para.assignedTo}</span>
+        <span style="font-size:0.55rem;color:var(--gold-dark);font-weight:700;margin-top:2px;display:block;">Tap → done</span>
+      </div>`;
+    return `
+      <div class="para-tile available" onclick="claimPara(${para.number})">
+        <span class="para-num">${para.number}</span>
+        <span class="para-name">${PARA_NAMES[para.number-1]}</span>
+        <span style="font-size:0.55rem;color:var(--teal-mid);font-weight:700;margin-top:2px;display:block;">Tap to claim</span>
+      </div>`;
+  }).join('');
+}
+
+function claimPara(num) {
+  if (!activeKhatm) return;
+  const name = document.getElementById('khatm-name').value.trim();
+  if (!name) { alert('Please enter your name first!'); document.getElementById('khatm-name').focus(); return; }
+  const para = activeKhatm.paras.find(p => p.number===num);
+  if (!para || para.assignedTo) return;
+  para.assignedTo = name;
+  saveKhatmLocal(activeKhatm);
+  renderKhatm(activeKhatm);
+}
+
+function markParaDone(num) {
+  if (!activeKhatm) return;
+  if (!confirm(`Mark Para ${num} as complete?`)) return;
+  const para = activeKhatm.paras.find(p => p.number===num);
+  if (!para) return;
+  para.completed = true;
+  saveKhatmLocal(activeKhatm);
+  renderKhatm(activeKhatm);
+}
+
+function shareKhatmWhatsApp() {
+  if (!activeKhatm) return;
+  const encoded = encodeData(activeKhatm);
+  const link = `${APP_DOMAIN}/?k=${encoded}`;
+  const done  = activeKhatm.paras.filter(p=>p.completed).length;
+  const msg   = `📖 *${activeKhatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
+  whatsappShare(msg, link);
+}
+
+function copyKhatmLink() {
+  if (!activeKhatm) return;
+  const encoded = encodeData(activeKhatm);
+  const link = `${APP_DOMAIN}/?k=${encoded}`;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('copyKhatmBtn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy', 1800); }
+  });
+}
+
+function loadMyKhatms() {
+  const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+  const wrap = document.getElementById('myKhatmsWrap');
+  const list = document.getElementById('myKhatmsList');
+  if (!all.length) { if(wrap) wrap.style.display='none'; return; }
+  if(wrap) wrap.style.display='block';
+  list.innerHTML = all.map(k => {
+    const done = k.paras.filter(p=>p.completed).length;
+    const pct  = Math.round((done/30)*100);
+    const enc  = encodeData(k);
+    return `<div class="khatm-row" onclick="loadKhatmFromHistory('${enc}')">
+      <div class="khatm-row-icon">📖</div>
+      <div style="flex:1;">
+        <div class="khatm-row-name">${k.description}</div>
+        <div class="khatm-row-meta">${done}/30 paras done</div>
+        <div class="progress-wrap" style="margin-top:4px;height:5px;"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="khatm-row-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function loadKhatmFromHistory(enc) {
+  const khatm = decodeData(enc);
+  if (!khatm) return;
+  activeKhatm = khatm;
+  const encoded = encodeData(khatm);
+  window.history.replaceState({}, '', `?k=${encoded}`);
+  showKhatmView(khatm);
+  // Make sure khatm tool is open
+  document.querySelectorAll('.tool').forEach(t => t.classList.remove('open'));
+  document.getElementById('tool-khatm').classList.add('open');
+}
+
+// ── ZIKR ─────────────────────────────────────
+let standaloneSession = 0;
+let zikrSession  = 0;
+let currentZikr  = null;
+
+function tapStandalone() {
+  standaloneSession++;
+  const el = document.getElementById('standalone-count');
+  el.textContent = standaloneSession.toLocaleString();
+  el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 200);
+  document.getElementById('standalone-session').textContent = standaloneSession.toLocaleString();
+}
+
+function saveStandalone() {
+  const prev = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
+  const newTotal = prev + standaloneSession;
+  localStorage.setItem('mqt_standalone_total', newTotal);
+  standaloneSession = 0;
+  document.getElementById('standalone-count').textContent   = '0';
+  document.getElementById('standalone-session').textContent = '0';
+  document.getElementById('standalone-saved').textContent   = newTotal.toLocaleString();
+}
+
+function resetStandalone() {
+  if (!confirm('Reset all counts?')) return;
+  standaloneSession = 0;
+  localStorage.removeItem('mqt_standalone_total');
+  ['standalone-count','standalone-session','standalone-saved'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.textContent = '0';
+  });
+}
+
+function createZikr() {
+  const desc   = document.getElementById('zikr-desc').value.trim();
+  const target = parseInt(document.getElementById('zikr-target').value) || 100;
+  if (!desc) { alert('Please enter what you are counting.'); return; }
+  const zikr = { code:generateCode(), description:desc, target, total:0, contributions:[], createdAt:new Date().toISOString() };
+  currentZikr = zikr;
+  const encoded = encodeData(zikr);
+  window.history.replaceState({}, '', `?z=${encoded}`);
+  document.getElementById('zikr-form').style.display = 'none';
+  document.getElementById('zikr-view').style.display = 'block';
+  renderZikr(zikr);
+}
+
+function resetZikr() {
+  currentZikr = null; zikrSession = 0;
+  window.history.replaceState({}, '', window.location.pathname);
+  document.getElementById('zikr-form').style.display = 'block';
+  document.getElementById('zikr-view').style.display = 'none';
+  document.getElementById('zikr-desc').value = '';
+  document.getElementById('zikr-target').value = '';
+}
+
+function renderZikr(z) {
+  document.getElementById('zikr-view-title').textContent    = z.description;
+  document.getElementById('zikr-total').textContent         = z.total.toLocaleString();
+  document.getElementById('zikr-target-display').textContent= z.target.toLocaleString();
+  const pct = Math.min(100, Math.round((z.total/z.target)*100));
+  document.getElementById('zikr-progress-fill').style.width = pct + '%';
+  document.getElementById('zikr-pct').textContent           = pct + '%';
+  const enc = encodeData(z);
+  window.history.replaceState({}, '', `?z=${enc}`);
+  const el = document.getElementById('zikr-contributions');
+  el.innerHTML = z.contributions.length === 0
+    ? '<div class="empty-state">No contributions yet — be the first!</div>'
+    : z.contributions.map(c =>
+        `<div class="contrib-item"><span class="contrib-name">${c.name}</span><span class="contrib-count">${c.count.toLocaleString()}</span></div>`
+      ).join('');
+}
+
+function tapZikr() {
+  zikrSession++;
+  const el = document.getElementById('zikr-session-count');
+  el.textContent = zikrSession.toLocaleString();
+  el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 200);
+}
+
+function saveZikrSession() {
+  if (zikrSession===0) { alert('Tap first!'); return; }
+  const name = document.getElementById('zikr-name').value.trim() || 'Anonymous';
+  if (!currentZikr) return;
+  currentZikr.total += zikrSession;
+  const ex = currentZikr.contributions.find(c=>c.name===name);
+  if (ex) ex.count += zikrSession; else currentZikr.contributions.push({name, count:zikrSession});
+  zikrSession = 0;
+  document.getElementById('zikr-session-count').textContent = '0';
+  renderZikr(currentZikr);
+}
+
+function shareZikrWhatsApp() {
+  if (!currentZikr) return;
+  const encoded = encodeData(currentZikr);
+  const link = `${APP_DOMAIN}/?z=${encoded}`;
+  const msg  = `🤲 *${currentZikr.description}* — Group Zikr\nTotal: ${currentZikr.total.toLocaleString()}/${currentZikr.target.toLocaleString()}. Tap to join:`;
+  whatsappShare(msg, link);
+}
+
+// ── YAASEEN ──────────────────────────────────
+let yaaseenSession = 0;
+let currentYaaseen = null;
+
+function createYaaseen() {
+  const desc   = document.getElementById('yaaseen-desc').value.trim();
+  const target = parseInt(document.getElementById('yaaseen-target').value) || 41;
+  if (!desc) { alert('Please enter a description.'); return; }
+  const y = { code:generateCode(), description:desc, target, total:0, contributions:[], createdAt:new Date().toISOString() };
+  currentYaaseen = y;
+  const encoded = encodeData(y);
+  window.history.replaceState({}, '', `?y=${encoded}`);
+  document.getElementById('yaaseen-form').style.display = 'none';
+  document.getElementById('yaaseen-view').style.display = 'block';
+  renderYaaseen(y);
+}
+
+function resetYaaseen() {
+  currentYaaseen = null; yaaseenSession = 0;
+  window.history.replaceState({}, '', window.location.pathname);
+  document.getElementById('yaaseen-form').style.display = 'block';
+  document.getElementById('yaaseen-view').style.display = 'none';
+  document.getElementById('yaaseen-desc').value = '';
+  document.getElementById('yaaseen-target').value = '';
+}
+
+function renderYaaseen(y) {
+  document.getElementById('yaaseen-view-title').textContent    = y.description;
+  document.getElementById('yaaseen-total').textContent         = y.total;
+  document.getElementById('yaaseen-target-display').textContent= y.target;
+  const pct = Math.min(100, Math.round((y.total/y.target)*100));
+  document.getElementById('yaaseen-progress-fill').style.width = pct + '%';
+  const enc = encodeData(y);
+  window.history.replaceState({}, '', `?y=${enc}`);
+  const el = document.getElementById('yaaseen-contributions');
+  el.innerHTML = y.contributions.length === 0
+    ? '<div class="empty-state">No contributions yet — be the first!</div>'
+    : y.contributions.map(c =>
+        `<div class="contrib-item"><span class="contrib-name">${c.name}</span><span class="contrib-count">${c.count}</span></div>`
+      ).join('');
+}
+
+function tapYaaseen() {
+  yaaseenSession++;
+  const el = document.getElementById('yaaseen-session');
+  el.textContent = yaaseenSession;
+  el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 200);
+}
+
+function saveYaaseenSession() {
+  if (yaaseenSession===0) { alert('Tap first!'); return; }
+  const name = document.getElementById('yaaseen-name').value.trim() || 'Anonymous';
+  if (!currentYaaseen) return;
+  currentYaaseen.total += yaaseenSession;
+  const ex = currentYaaseen.contributions.find(c=>c.name===name);
+  if (ex) ex.count += yaaseenSession; else currentYaaseen.contributions.push({name, count:yaaseenSession});
+  yaaseenSession = 0;
+  document.getElementById('yaaseen-session').textContent = '0';
+  renderYaaseen(currentYaaseen);
+}
+
+function shareYaaseenWhatsApp() {
+  if (!currentYaaseen) return;
+  const encoded = encodeData(currentYaaseen);
+  const link = `${APP_DOMAIN}/?y=${encoded}`;
+  const msg  = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nTotal: ${currentYaaseen.total}/${currentYaaseen.target}. Tap to join:`;
+  whatsappShare(msg, link);
+}
+
+// ── INIT ─────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Load saved standalone total
+  const saved = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
+  document.getElementById('standalone-saved').textContent = saved.toLocaleString();
+
+  // Load my khatms in khatm tool
+  loadMyKhatms();
+
+  // Check URL params — open correct tool with data
+  const kParam = getParam('k');
+  const zParam = getParam('z');
+  const yParam = getParam('y');
+
+  if (kParam) {
+    const khatm = decodeData(kParam);
+    if (khatm) {
+      activeKhatm = khatm;
       saveKhatmLocal(khatm);
-      const encoded = encodeKhatm(khatm);
-      window.location.href = 'quraan.html?k=' + encoded;
+      document.getElementById('tool-khatm').classList.add('open');
+      showKhatmView(khatm);
     }
-
-    function homeCreateZikr() {
-      const desc   = document.getElementById('zikrDesc').value.trim();
-      const target = parseInt(document.getElementById('zikrTarget').value) || 100;
-      if (!desc) { alert('Please enter what you are counting.'); return; }
-      const zikr = { code: generateCode(), description: desc, target, total: 0, contributions: [], createdAt: new Date().toISOString() };
-      const encoded = encodeZikr(zikr);
-      window.location.href = 'zikr.html?z=' + encoded;
+  } else if (zParam) {
+    const zikr = decodeData(zParam);
+    if (zikr) {
+      currentZikr = zikr;
+      document.getElementById('tool-zikr').classList.add('open');
+      document.getElementById('zikr-form').style.display = 'none';
+      document.getElementById('zikr-view').style.display = 'block';
+      renderZikr(zikr);
     }
-
-    window.addEventListener('DOMContentLoaded', initHomePage);
-  </script>
+  } else if (yParam) {
+    const y = decodeData(yParam);
+    if (y) {
+      currentYaaseen = y;
+      document.getElementById('tool-yaaseen').classList.add('open');
+      document.getElementById('yaaseen-form').style.display = 'none';
+      document.getElementById('yaaseen-view').style.display = 'block';
+      renderYaaseen(y);
+    }
+  }
+});
+</script>
 </body>
 </html>

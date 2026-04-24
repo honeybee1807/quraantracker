@@ -3,6 +3,8 @@
    Sharing: URL-encoded data (no database needed)
    Works across all phones via WhatsApp links
    ============================================= */
+const SUPABASE_URL    = 'https://urvddwtcdycqurrczrnl.supabase.co';  // ← your URL
+const SUPABASE_ANON_KEY = 'sb_publishable_-VWTgzly0_-dpKuqcWlKZQ_NWm_VHMh';               // ← your anon key
 
 const PARA_NAMES = [
   "Alif Lam Meem","Sayaqool","Tilkar Rusul","Lan Tana Loo",
