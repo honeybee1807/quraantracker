@@ -640,8 +640,8 @@
               <span id="khatm-progress-pct">0%</span>
             </div>
             <div class="btn-row">
-              <a id="khatm-wa-btn" href="#" target="_blank" rel="noopener" class="btn btn-wa" style="flex:1;margin-bottom:0;"><i class="fab fa-whatsapp"></i> Share on WhatsApp</a>
-              <button class="btn btn-ghost" id="copyKhatmBtn" onclick="copyKhatmLink()">Copy</button>
+              <button id="saveKhatmBtn" class="btn btn-teal" style="flex:1;margin-bottom:0;" onclick="saveKhatmToDB()"><i class="fas fa-floppy-disk"></i> Save</button>
+              <button class="btn btn-ghost" id="copyKhatmBtn" onclick="copyKhatmLink()">Copy Link</button>
             </div>
             <p class="note">Share again after any update so everyone sees the latest.</p>
             <input type="text" class="field" id="khatm-name" placeholder="Your name…">
@@ -1035,8 +1035,25 @@ function copyKhatmLink() {
   const link = `${APP_DOMAIN}/?k=${activeKhatm.id}`;
   navigator.clipboard.writeText(link).then(() => {
     const btn = document.getElementById('copyKhatmBtn');
-    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy', 1800); }
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy Link', 1800); }
   });
+}
+
+async function saveKhatmToDB() {
+  if (!activeKhatm) return;
+  const btn = document.getElementById('saveKhatmBtn');
+  setBtn(btn, '<i class="fas fa-spinner fa-spin"></i> Saving…', true);
+  try {
+    await sbFetch(`khatms?id=eq.${activeKhatm.id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ paras: activeKhatm.paras })
+    });
+    setBtn(btn, '✓ Saved!', false);
+    setTimeout(() => setBtn(btn, '<i class="fas fa-floppy-disk"></i> Save', false), 2000);
+  } catch(e) {
+    setBtn(btn, '<i class="fas fa-floppy-disk"></i> Save', false);
+    alert('Could not save. Please try again.');
+  }
 }
 
 // ══════════════════════════════════════════════
