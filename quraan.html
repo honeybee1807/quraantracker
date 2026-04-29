@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Quraan Khatm — My Quraan Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <!-- Basic SEO -->
@@ -96,9 +95,10 @@
 
         <!-- WhatsApp share -->
         <div style="display:flex;gap:0.6rem;margin-top:1rem;">
-          <button class="btn btn-primary" style="flex:1;background:#25D366;" onclick="shareKhatmWhatsApp()">
+          <a id="khatmWaBtn" href="#" target="_blank" rel="noopener"
+             class="btn" style="flex:1;background:#25D366;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
             <i class="fab fa-whatsapp"></i> Share on WhatsApp
-          </button>
+          </a>
           <button id="copyLinkBtn" class="btn btn-ghost btn-sm" onclick="copyKhatmLink()" style="flex-shrink:0;">
             Copy Link
           </button>
@@ -121,9 +121,10 @@
 
     <!-- Share update button at bottom -->
     <div style="margin-top:1.5rem;">
-      <button class="btn" style="background:#25D366;color:white;" onclick="shareKhatmWhatsApp()">
+      <a id="khatmWaBtnBottom" href="#" target="_blank" rel="noopener"
+         class="btn" style="background:#25D366;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
         <i class="fab fa-whatsapp"></i> Share Updated Khatm
-      </button>
+      </a>
     </div>
 
   </div>

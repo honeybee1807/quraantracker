@@ -1,7 +1,7 @@
 /* =============================================
    MY QURAAN TRACKER — script.js
-   Fixes: WhatsApp iOS deep-link + double counter
-   Sharing: URL-encoded data (no database needed)
+   WhatsApp sharing: plain <a href> — no JS
+   navigation, no window.open, no iOS dialogs.
    ============================================= */
 
 const PARA_NAMES = [
@@ -47,34 +47,26 @@ function buildYaaseenShareLink(y) {
   return `${APP_DOMAIN}/yaaseencounts.html?y=${btoa(unescape(encodeURIComponent(JSON.stringify(y))))}`;
 }
 
-// ── WHATSAPP SHARE (iOS + Android fixed) ─────
-//
-// FIX 1: window.open('https://wa.me/…') on iOS Safari opens the
-//   WhatsApp *website* in the browser instead of the app, and
-//   triggers the "This site is trying to open another application"
-//   dialog that blocks many users.
-//   Solution: use window.location.href with the native whatsapp://
-//   URI scheme — iOS and Android both handle this directly with no
-//   browser dialog, and it opens the WhatsApp app immediately.
-//
-// FIX 2: TinyURL shortening was failing silently due to CORS on
-//   mobile browsers, so the fallback full URL (~2000 chars) was being
-//   used, which WhatsApp then truncated or mangled in the preview.
-//   Solution: removed TinyURL entirely. The whatsapp:// scheme passes
-//   the full text body fine; only the link *inside* the message needs
-//   to be clickable, and that is already the plain https:// URL.
+// ── WA LINK BUILDER ───────────────────────────
+// WHY THIS WORKS ON iOS:
+//   A plain <a href="https://wa.me/…"> that the *user taps* is treated
+//   by iOS as a normal link follow — Safari hands it off to WhatsApp
+//   with no dialog. Only JS-initiated navigation (window.open,
+//   location.href) triggers the "This site is trying to open another
+//   application" security prompt.
+//   So we never call any JS to navigate. We just keep the href on the
+//   anchor tag up to date, and let the user tap it naturally.
 
-function whatsappShare(text, url) {
-  const btns = document.querySelectorAll('[onclick*="WhatsApp"], [onclick*="whatsapp"]');
-  btns.forEach(b => { b._orig = b.innerHTML; b.innerHTML = '⏳ Opening…'; b.disabled = true; });
+function buildWaHref(text, url) {
+  return `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
+}
 
-  setTimeout(() => {
-    btns.forEach(b => { if (b._orig) { b.innerHTML = b._orig; b.disabled = false; } });
-  }, 1500);
-
-  const fullMsg = encodeURIComponent(`${text}\n${url}`);
-  // Native URI scheme — no popup, opens WhatsApp app directly on iOS & Android
-  window.location.href = `whatsapp://send?text=${fullMsg}`;
+// Set the href on one or more anchor elements by id
+function setWaLink(ids, href) {
+  (Array.isArray(ids) ? ids : [ids]).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.href = href;
+  });
 }
 
 // Save khatm to localStorage
@@ -146,8 +138,16 @@ function renderKhatm(khatm) {
 
   if (done === 30) document.getElementById('khatmComplete').style.display = 'block';
 
+  // Keep URL bar in sync
   window.history.replaceState({}, '', `quraan.html?k=${encodeKhatm(khatm)}`);
 
+  // Update both WhatsApp anchor tags
+  const link = buildKhatmShareLink(khatm);
+  const msg  = `📖 *${khatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
+  const href = buildWaHref(msg, link);
+  setWaLink(['khatmWaBtn', 'khatmWaBtnBottom'], href);
+
+  // Paras grid
   const grid = document.getElementById('parasGrid');
   grid.innerHTML = khatm.paras.map(para => {
     if (para.completed) {
@@ -195,14 +195,6 @@ function markDone(num) {
   renderKhatm(activeKhatm);
 }
 
-function shareKhatmWhatsApp() {
-  if (!activeKhatm) return;
-  const link = buildKhatmShareLink(activeKhatm);
-  const done = activeKhatm.paras.filter(p => p.completed).length;
-  const msg  = `📖 *${activeKhatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
-  whatsappShare(msg, link);
-}
-
 function copyKhatmLink() {
   if (!activeKhatm) return;
   const link = buildKhatmShareLink(activeKhatm);
@@ -241,19 +233,6 @@ function initHomePage() {
 
 // ─────────────────────────────────────────────
 //  ZIKR PAGE
-//
-//  FIX — double counter root cause:
-//  zikr.html has TWO sections inside zikrFormSection:
-//    1. Quick Tasbeeh (standalone)
-//    2. Group Counter creation form
-//  AND a separate zikrView for the live group counter.
-//
-//  Old bug: when ?z= param existed but decodeZikr failed (because
-//  WhatsApp truncated the long encoded URL), the code fell through
-//  to showZikrForm(), which made both sections visible simultaneously.
-//
-//  Fix: always hide both sections first when a ?z= param is present.
-//  Only show the exact section that matches the resolved state.
 // ─────────────────────────────────────────────
 let zikrSession       = 0;
 let currentZikr       = null;
@@ -263,14 +242,12 @@ function initZikrPage() {
   const zParam = getParam('z');
 
   if (zParam) {
-    // Param present — hide everything while we decode
     document.getElementById('zikrFormSection').style.display = 'none';
     document.getElementById('zikrView').style.display        = 'none';
 
     const zikr = decodeZikr(zParam);
 
     if (!zikr) {
-      // Decode failed — show a friendly error, not the form
       document.getElementById('zikrView').style.display = 'block';
       document.getElementById('zikrView').innerHTML = `
         <div class="card fade-up" style="margin:1rem;">
@@ -280,9 +257,8 @@ function initZikrPage() {
               Link could not be loaded
             </div>
             <p style="font-size:0.85rem;color:var(--text-soft);margin-bottom:1.25rem;">
-              WhatsApp may have shortened or broken this link.
-              Ask the organiser to send the link again using
-              <strong>Copy Link</strong> instead of Share on WhatsApp.
+              WhatsApp may have broken this link. Ask the organiser
+              to tap <strong>Copy Link</strong> and paste it directly.
             </p>
             <a href="zikr.html" class="btn btn-primary">Start a new counter</a>
           </div>
@@ -290,14 +266,12 @@ function initZikrPage() {
       return;
     }
 
-    // Valid — show only the group counter view
     currentZikr = zikr;
     document.getElementById('zikrView').style.display = 'block';
     renderZikr(zikr);
     return;
   }
 
-  // No param — normal page with standalone tasbeeh + group form
   showZikrForm();
 }
 
@@ -340,6 +314,11 @@ function renderZikr(zikr) {
       ).join('');
 
   window.history.replaceState({}, '', `zikr.html?z=${encodeZikr(zikr)}`);
+
+  // Update WhatsApp anchor href
+  const link = buildZikrShareLink(zikr);
+  const msg  = `🤲 *${zikr.description}* — Group Zikr\nTotal: ${zikr.total}/${zikr.target}. Tap to join:`;
+  setWaLink('zikrWaBtn', buildWaHref(msg, link));
 }
 
 function tapZikr() {
@@ -359,13 +338,6 @@ function saveZikrSession() {
   zikrSession = 0;
   document.getElementById('zikrSessionCount').textContent = '0';
   renderZikr(currentZikr);
-}
-
-function shareZikrWhatsApp() {
-  if (!currentZikr) return;
-  const link = buildZikrShareLink(currentZikr);
-  const msg  = `🤲 *${currentZikr.description}* — Group Zikr\nTotal: ${currentZikr.total}/${currentZikr.target}. Tap to join:`;
-  whatsappShare(msg, link);
 }
 
 // ── STANDALONE TASBEEH ──────────────────────
@@ -398,7 +370,6 @@ function resetStandalone() {
 
 // ─────────────────────────────────────────────
 //  YAASEEN PAGE
-//  Same double-visibility fix applied here.
 // ─────────────────────────────────────────────
 let yaaseenSession = 0;
 let currentYaaseen = null;
@@ -425,9 +396,8 @@ function initYaaseenPage() {
               Link could not be loaded
             </div>
             <p style="font-size:0.85rem;color:var(--text-soft);margin-bottom:1.25rem;">
-              WhatsApp may have shortened or broken this link.
-              Ask the organiser to send the link again using
-              <strong>Copy Link</strong> instead of Share on WhatsApp.
+              WhatsApp may have broken this link. Ask the organiser
+              to tap <strong>Copy Link</strong> and paste it directly.
             </p>
             <a href="yaaseencounts.html" class="btn btn-gold">Start a new counter</a>
           </div>
@@ -473,6 +443,11 @@ function renderYaaseen(y) {
 
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(y))));
   window.history.replaceState({}, '', `yaaseencounts.html?y=${encoded}`);
+
+  // Update WhatsApp anchor href
+  const link = buildYaaseenShareLink(y);
+  const msg  = `⭐ *${y.description}* — Yaaseen Counter\nTotal: ${y.total}/${y.target}. Tap to join:`;
+  setWaLink('yaaseenWaBtn', buildWaHref(msg, link));
 }
 
 function tapYaaseen() {
@@ -491,13 +466,6 @@ function saveYaaseenSession() {
   yaaseenSession = 0;
   const el = document.getElementById('yaaseenSession'); if (el) el.textContent = '0';
   renderYaaseen(currentYaaseen);
-}
-
-function shareYaaseenWhatsApp() {
-  if (!currentYaaseen) return;
-  const link = buildYaaseenShareLink(currentYaaseen);
-  const msg  = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nTotal: ${currentYaaseen.total}/${currentYaaseen.target}. Tap to join:`;
-  whatsappShare(msg, link);
 }
 
 // ─────────────────────────────────────────────
