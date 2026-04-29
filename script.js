@@ -1,10 +1,8 @@
 /* =============================================
    MY QURAAN TRACKER — script.js
+   Fixes: WhatsApp iOS deep-link + double counter
    Sharing: URL-encoded data (no database needed)
-   Works across all phones via WhatsApp links
    ============================================= */
-const SUPABASE_URL    = 'https://urvddwtcdycqurrczrnl.supabase.co';  // ← your URL
-const SUPABASE_ANON_KEY = 'sb_publishable_-VWTgzly0_-dpKuqcWlKZQ_NWm_VHMh';               // ← your anon key
 
 const PARA_NAMES = [
   "Alif Lam Meem","Sayaqool","Tilkar Rusul","Lan Tana Loo",
@@ -22,67 +20,64 @@ function getParam(n) {
   return new URLSearchParams(window.location.search).get(n);
 }
 
-// Encode khatm object into a URL-safe string
 function encodeKhatm(khatm) {
   return btoa(unescape(encodeURIComponent(JSON.stringify(khatm))));
 }
-
-// Decode khatm from URL string
 function decodeKhatm(str) {
   try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
   catch(e) { return null; }
 }
-
-// Encode zikr object
 function encodeZikr(zikr) {
   return btoa(unescape(encodeURIComponent(JSON.stringify(zikr))));
 }
-
 function decodeZikr(str) {
   try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
   catch(e) { return null; }
 }
 
-// Build the shareable WhatsApp link for a khatm
 const APP_DOMAIN = 'https://myquraantracker.netlify.app';
 
 function buildKhatmShareLink(khatm) {
-  const encoded = encodeKhatm(khatm);
-  return `${APP_DOMAIN}/quraan.html?k=${encoded}`;
+  return `${APP_DOMAIN}/quraan.html?k=${encodeKhatm(khatm)}`;
 }
-
 function buildZikrShareLink(zikr) {
-  const encoded = encodeZikr(zikr);
-  return `${APP_DOMAIN}/zikr.html?z=${encoded}`;
+  return `${APP_DOMAIN}/zikr.html?z=${encodeZikr(zikr)}`;
+}
+function buildYaaseenShareLink(y) {
+  return `${APP_DOMAIN}/yaaseencounts.html?y=${btoa(unescape(encodeURIComponent(JSON.stringify(y))))}`;
 }
 
-// Shorten a URL using TinyURL (free, no signup, no API key)
-async function shortenUrl(longUrl) {
-  try {
-    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
-    if (res.ok) {
-      const short = await res.text();
-      if (short.startsWith('https://tinyurl.com/')) return short;
-    }
-  } catch(e) { /* fall through to long URL */ }
-  return longUrl; // fallback to full URL if shortener fails
+// ── WHATSAPP SHARE (iOS + Android fixed) ─────
+//
+// FIX 1: window.open('https://wa.me/…') on iOS Safari opens the
+//   WhatsApp *website* in the browser instead of the app, and
+//   triggers the "This site is trying to open another application"
+//   dialog that blocks many users.
+//   Solution: use window.location.href with the native whatsapp://
+//   URI scheme — iOS and Android both handle this directly with no
+//   browser dialog, and it opens the WhatsApp app immediately.
+//
+// FIX 2: TinyURL shortening was failing silently due to CORS on
+//   mobile browsers, so the fallback full URL (~2000 chars) was being
+//   used, which WhatsApp then truncated or mangled in the preview.
+//   Solution: removed TinyURL entirely. The whatsapp:// scheme passes
+//   the full text body fine; only the link *inside* the message needs
+//   to be clickable, and that is already the plain https:// URL.
+
+function whatsappShare(text, url) {
+  const btns = document.querySelectorAll('[onclick*="WhatsApp"], [onclick*="whatsapp"]');
+  btns.forEach(b => { b._orig = b.innerHTML; b.innerHTML = '⏳ Opening…'; b.disabled = true; });
+
+  setTimeout(() => {
+    btns.forEach(b => { if (b._orig) { b.innerHTML = b._orig; b.disabled = false; } });
+  }, 1500);
+
+  const fullMsg = encodeURIComponent(`${text}\n${url}`);
+  // Native URI scheme — no popup, opens WhatsApp app directly on iOS & Android
+  window.location.href = `whatsapp://send?text=${fullMsg}`;
 }
 
-// Share on WhatsApp — shortens link first so it's clean and clickable
-async function whatsappShare(text, url) {
-  // Show a brief "preparing..." state on the button
-  const btns = document.querySelectorAll('[onclick*="WhatsApp"]');
-  btns.forEach(b => { b._orig = b.innerHTML; b.innerHTML = '⏳ Preparing…'; b.disabled = true; });
-
-  const shortUrl = await shortenUrl(url);
-
-  btns.forEach(b => { b.innerHTML = b._orig; b.disabled = false; });
-
-  const msg = encodeURIComponent(`${text}\n${shortUrl}`);
-  window.open(`https://wa.me/?text=${msg}`, '_blank');
-}
-
-// Save khatm to localStorage (for "My Khatms" list on home)
+// Save khatm to localStorage
 function saveKhatmLocal(khatm) {
   const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
   const idx = all.findIndex(k => k.code === khatm.code);
@@ -100,13 +95,12 @@ function generateCode() {
 let activeKhatm = null;
 
 function initKhatmPage() {
-  // Check URL for encoded khatm data
   const kParam = getParam('k');
   if (kParam) {
     const khatm = decodeKhatm(kParam);
     if (!khatm) { showKhatmForm(); return; }
     activeKhatm = khatm;
-    saveKhatmLocal(khatm); // save locally so it appears in "My Khatms"
+    saveKhatmLocal(khatm);
     showKhatmView(khatm);
     return;
   }
@@ -137,17 +131,13 @@ function createKhatmFromPage() {
   };
   activeKhatm = khatm;
   saveKhatmLocal(khatm);
-  // Push to URL so page can be refreshed / shared
-  const encoded = encodeKhatm(khatm);
-  window.history.replaceState({}, '', `quraan.html?k=${encoded}`);
+  window.history.replaceState({}, '', `quraan.html?k=${encodeKhatm(khatm)}`);
   showKhatmView(khatm);
 }
 
 function renderKhatm(khatm) {
-  // Title & code
   document.getElementById('khatmTitle').textContent = khatm.description;
 
-  // Progress
   const done = khatm.paras.filter(p => p.completed).length;
   const pct  = Math.round((done / 30) * 100);
   document.getElementById('progressFill').style.width = pct + '%';
@@ -156,11 +146,8 @@ function renderKhatm(khatm) {
 
   if (done === 30) document.getElementById('khatmComplete').style.display = 'block';
 
-  // Update share URL in the URL bar
-  const encoded = encodeKhatm(khatm);
-  window.history.replaceState({}, '', `quraan.html?k=${encoded}`);
+  window.history.replaceState({}, '', `quraan.html?k=${encodeKhatm(khatm)}`);
 
-  // Paras grid
   const grid = document.getElementById('parasGrid');
   grid.innerHTML = khatm.paras.map(para => {
     if (para.completed) {
@@ -208,7 +195,6 @@ function markDone(num) {
   renderKhatm(activeKhatm);
 }
 
-// Share updated Khatm via WhatsApp
 function shareKhatmWhatsApp() {
   if (!activeKhatm) return;
   const link = buildKhatmShareLink(activeKhatm);
@@ -217,7 +203,6 @@ function shareKhatmWhatsApp() {
   whatsappShare(msg, link);
 }
 
-// Copy the share link to clipboard
 function copyKhatmLink() {
   if (!activeKhatm) return;
   const link = buildKhatmShareLink(activeKhatm);
@@ -228,10 +213,9 @@ function copyKhatmLink() {
 }
 
 // ─────────────────────────────────────────────
-//  HOME PAGE — load from URL if khatm in param
+//  HOME PAGE
 // ─────────────────────────────────────────────
 function initHomePage() {
-  // Load my khatms from localStorage for the "My Khatms" section
   const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
   const section = document.getElementById('myKhatmsSection');
   const list    = document.getElementById('myKhatmsList');
@@ -246,7 +230,9 @@ function initHomePage() {
       <div class="khatm-row-info">
         <div class="khatm-row-name">${k.description}</div>
         <div class="khatm-row-meta">${done}/30 paras done</div>
-        <div class="progress-wrap" style="margin-top:0.35rem;height:6px;"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="progress-wrap" style="margin-top:0.35rem;height:6px;">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
       </div>
       <div class="khatm-row-pct">${pct}%</div>
     </a>`;
@@ -255,28 +241,69 @@ function initHomePage() {
 
 // ─────────────────────────────────────────────
 //  ZIKR PAGE
+//
+//  FIX — double counter root cause:
+//  zikr.html has TWO sections inside zikrFormSection:
+//    1. Quick Tasbeeh (standalone)
+//    2. Group Counter creation form
+//  AND a separate zikrView for the live group counter.
+//
+//  Old bug: when ?z= param existed but decodeZikr failed (because
+//  WhatsApp truncated the long encoded URL), the code fell through
+//  to showZikrForm(), which made both sections visible simultaneously.
+//
+//  Fix: always hide both sections first when a ?z= param is present.
+//  Only show the exact section that matches the resolved state.
 // ─────────────────────────────────────────────
-let zikrSession  = 0;
-let currentZikr  = null;
+let zikrSession       = 0;
+let currentZikr       = null;
 let standaloneSession = 0;
 
 function initZikrPage() {
   const zParam = getParam('z');
+
   if (zParam) {
-    const zikr = decodeZikr(zParam);
-    if (!zikr) { showZikrForm(); return; }
-    currentZikr = zikr;
+    // Param present — hide everything while we decode
     document.getElementById('zikrFormSection').style.display = 'none';
+    document.getElementById('zikrView').style.display        = 'none';
+
+    const zikr = decodeZikr(zParam);
+
+    if (!zikr) {
+      // Decode failed — show a friendly error, not the form
+      document.getElementById('zikrView').style.display = 'block';
+      document.getElementById('zikrView').innerHTML = `
+        <div class="card fade-up" style="margin:1rem;">
+          <div class="card-body" style="text-align:center;padding:2rem 1rem;">
+            <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
+            <div style="font-family:Georgia,serif;font-weight:700;color:var(--teal);font-size:1.1rem;margin-bottom:0.5rem;">
+              Link could not be loaded
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-soft);margin-bottom:1.25rem;">
+              WhatsApp may have shortened or broken this link.
+              Ask the organiser to send the link again using
+              <strong>Copy Link</strong> instead of Share on WhatsApp.
+            </p>
+            <a href="zikr.html" class="btn btn-primary">Start a new counter</a>
+          </div>
+        </div>`;
+      return;
+    }
+
+    // Valid — show only the group counter view
+    currentZikr = zikr;
     document.getElementById('zikrView').style.display = 'block';
     renderZikr(zikr);
     return;
   }
+
+  // No param — normal page with standalone tasbeeh + group form
   showZikrForm();
 }
 
 function showZikrForm() {
   document.getElementById('zikrFormSection').style.display = 'block';
-  document.getElementById('zikrView').style.display = 'none';
+  document.getElementById('zikrView').style.display        = 'none';
   const saved = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
   const el = document.getElementById('standaloneSaved');
   if (el) el.textContent = saved.toLocaleString();
@@ -291,10 +318,9 @@ function createZikrFromPage() {
     total: 0, contributions: [], createdAt: new Date().toISOString()
   };
   currentZikr = zikr;
-  const encoded = encodeZikr(zikr);
-  window.history.replaceState({}, '', `zikr.html?z=${encoded}`);
+  window.history.replaceState({}, '', `zikr.html?z=${encodeZikr(zikr)}`);
   document.getElementById('zikrFormSection').style.display = 'none';
-  document.getElementById('zikrView').style.display = 'block';
+  document.getElementById('zikrView').style.display        = 'block';
   renderZikr(zikr);
 }
 
@@ -305,15 +331,15 @@ function renderZikr(zikr) {
   const pct = Math.min(100, Math.round((zikr.total / zikr.target) * 100));
   document.getElementById('zikrProgressFill').style.width  = pct + '%';
   document.getElementById('zikrProgressPct').textContent   = pct + '%';
+
   const el = document.getElementById('zikrContributions');
   el.innerHTML = zikr.contributions.length === 0
     ? '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No contributions yet — be the first!</p></div>'
     : zikr.contributions.map(c =>
         `<div class="contrib-item"><span class="contrib-name">${c.name}</span><span class="contrib-count">${c.count.toLocaleString()}</span></div>`
       ).join('');
-  // update URL with latest data
-  const encoded = encodeZikr(zikr);
-  window.history.replaceState({}, '', `zikr.html?z=${encoded}`);
+
+  window.history.replaceState({}, '', `zikr.html?z=${encodeZikr(zikr)}`);
 }
 
 function tapZikr() {
@@ -342,7 +368,7 @@ function shareZikrWhatsApp() {
   whatsappShare(msg, link);
 }
 
-// ── STANDALONE TASBEEH ──
+// ── STANDALONE TASBEEH ──────────────────────
 function tapStandalone() {
   standaloneSession++;
   const el = document.getElementById('standaloneCount');
@@ -355,8 +381,9 @@ function saveStandalone() {
   const newTotal = prev + standaloneSession;
   localStorage.setItem('mqt_standalone_total', newTotal);
   standaloneSession = 0;
-  const els = ['standaloneCount','standaloneSession'];
-  els.forEach(id => { const e = document.getElementById(id); if (e) e.textContent = '0'; });
+  ['standaloneCount','standaloneSession'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.textContent = '0';
+  });
   const saved = document.getElementById('standaloneSaved');
   if (saved) saved.textContent = newTotal.toLocaleString();
 }
@@ -371,28 +398,50 @@ function resetStandalone() {
 
 // ─────────────────────────────────────────────
 //  YAASEEN PAGE
+//  Same double-visibility fix applied here.
 // ─────────────────────────────────────────────
-let yaaseenSession  = 0;
-let currentYaaseen  = null;
+let yaaseenSession = 0;
+let currentYaaseen = null;
 
 function initYaaseenPage() {
   const yParam = getParam('y');
+
   if (yParam) {
+    document.getElementById('yaaseenFormSection').style.display = 'none';
+    document.getElementById('yaaseenView').style.display        = 'none';
+
     try {
       const y = JSON.parse(decodeURIComponent(escape(atob(yParam))));
       currentYaaseen = y;
-      document.getElementById('yaaseenFormSection').style.display = 'none';
       document.getElementById('yaaseenView').style.display = 'block';
       renderYaaseen(y);
-    } catch(e) { showYaaseenForm(); }
+    } catch(e) {
+      document.getElementById('yaaseenView').style.display = 'block';
+      document.getElementById('yaaseenView').innerHTML = `
+        <div class="card fade-up" style="margin:1rem;">
+          <div class="card-body" style="text-align:center;padding:2rem 1rem;">
+            <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
+            <div style="font-family:Georgia,serif;font-weight:700;color:var(--gold-dark);font-size:1.1rem;margin-bottom:0.5rem;">
+              Link could not be loaded
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-soft);margin-bottom:1.25rem;">
+              WhatsApp may have shortened or broken this link.
+              Ask the organiser to send the link again using
+              <strong>Copy Link</strong> instead of Share on WhatsApp.
+            </p>
+            <a href="yaaseencounts.html" class="btn btn-gold">Start a new counter</a>
+          </div>
+        </div>`;
+    }
     return;
   }
+
   showYaaseenForm();
 }
 
 function showYaaseenForm() {
   document.getElementById('yaaseenFormSection').style.display = 'block';
-  document.getElementById('yaaseenView').style.display = 'none';
+  document.getElementById('yaaseenView').style.display        = 'none';
 }
 
 function createYaaseenFromPage() {
@@ -404,7 +453,7 @@ function createYaaseenFromPage() {
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(y))));
   window.history.replaceState({}, '', `yaaseencounts.html?y=${encoded}`);
   document.getElementById('yaaseenFormSection').style.display = 'none';
-  document.getElementById('yaaseenView').style.display = 'block';
+  document.getElementById('yaaseenView').style.display        = 'block';
   renderYaaseen(y);
 }
 
@@ -414,12 +463,14 @@ function renderYaaseen(y) {
   document.getElementById('yaaseenTargetDisplay').textContent = y.target;
   const pct = Math.min(100, Math.round((y.total / y.target) * 100));
   document.getElementById('yaaseenProgressFill').style.width  = pct + '%';
+
   const list = document.getElementById('yaaseenContributions');
   list.innerHTML = y.contributions.length === 0
     ? '<div class="empty-state"><i class="fas fa-star-and-crescent"></i><p>No contributions yet — be the first!</p></div>'
     : y.contributions.map(c =>
         `<div class="contrib-item"><span class="contrib-name">${c.name}</span><span class="contrib-count">${c.count}</span></div>`
       ).join('');
+
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(y))));
   window.history.replaceState({}, '', `yaaseencounts.html?y=${encoded}`);
 }
@@ -444,16 +495,15 @@ function saveYaaseenSession() {
 
 function shareYaaseenWhatsApp() {
   if (!currentYaaseen) return;
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(currentYaaseen))));
-  const url = `${APP_DOMAIN}/yaaseencounts.html?y=${encoded}`;
-  const msg = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nTotal: ${currentYaaseen.total}/${currentYaaseen.target}. Tap to join:`;
-  whatsappShare(msg, url);
+  const link = buildYaaseenShareLink(currentYaaseen);
+  const msg  = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nTotal: ${currentYaaseen.total}/${currentYaaseen.target}. Tap to join:`;
+  whatsappShare(msg, link);
 }
 
 // ─────────────────────────────────────────────
 //  DRAWER
 // ─────────────────────────────────────────────
-function openDrawer()  {
+function openDrawer() {
   document.getElementById('drawer')?.classList.add('open');
   document.getElementById('overlay')?.classList.add('open');
 }
