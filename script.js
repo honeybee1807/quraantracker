@@ -1,8 +1,15 @@
 /* =============================================
    MY QURAAN TRACKER — script.js
-   WhatsApp sharing: plain <a href> — no JS
-   navigation, no window.open, no iOS dialogs.
+   Data: Supabase (PostgreSQL)
+   Sharing: Short code via URL param only
    ============================================= */
+
+// ── SUPABASE CONFIG ───────────────────────────
+// 🔑 Replace these with your new credentials
+const SUPABASE_URL = 'https://urvddwtcdycqurrczrnl.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bG3fICPySEzuufIHOKkZ-A_Zx2a_IKX';
+
+const APP_DOMAIN = 'https://myquraantracker.netlify.app';
 
 const PARA_NAMES = [
   "Alif Lam Meem","Sayaqool","Tilkar Rusul","Lan Tana Loo",
@@ -14,54 +21,42 @@ const PARA_NAMES = [
   "Ha Meem","Qala Fama Khatbukum","Qad Sami Allah","Tabarakallazi","Amma"
 ];
 
-// ── HELPERS ──────────────────────────────────
+// ── SUPABASE HELPER ───────────────────────────
+
+async function sbFetch(path, options = {}) {
+  const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...options.headers
+    }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase error: ${err}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// ── GENERAL HELPERS ───────────────────────────
 
 function getParam(n) {
   return new URLSearchParams(window.location.search).get(n);
 }
 
-function encodeKhatm(khatm) {
-  return btoa(unescape(encodeURIComponent(JSON.stringify(khatm))));
+function generateCode() {
+  return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
-function decodeKhatm(str) {
-  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
-  catch(e) { return null; }
-}
-function encodeZikr(zikr) {
-  return btoa(unescape(encodeURIComponent(JSON.stringify(zikr))));
-}
-function decodeZikr(str) {
-  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
-  catch(e) { return null; }
-}
-
-const APP_DOMAIN = 'https://myquraantracker.netlify.app';
-
-function buildKhatmShareLink(khatm) {
-  return `${APP_DOMAIN}/quraan.html?k=${encodeKhatm(khatm)}`;
-}
-function buildZikrShareLink(zikr) {
-  return `${APP_DOMAIN}/zikr.html?z=${encodeZikr(zikr)}`;
-}
-function buildYaaseenShareLink(y) {
-  return `${APP_DOMAIN}/yaaseencounts.html?y=${btoa(unescape(encodeURIComponent(JSON.stringify(y))))}`;
-}
-
-// ── WA LINK BUILDER ───────────────────────────
-// WHY THIS WORKS ON iOS:
-//   A plain <a href="https://wa.me/…"> that the *user taps* is treated
-//   by iOS as a normal link follow — Safari hands it off to WhatsApp
-//   with no dialog. Only JS-initiated navigation (window.open,
-//   location.href) triggers the "This site is trying to open another
-//   application" security prompt.
-//   So we never call any JS to navigate. We just keep the href on the
-//   anchor tag up to date, and let the user tap it naturally.
 
 function buildWaHref(text, url) {
   return `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
 }
 
-// Set the href on one or more anchor elements by id
 function setWaLink(ids, href) {
   (Array.isArray(ids) ? ids : [ids]).forEach(id => {
     const el = document.getElementById(id);
@@ -69,62 +64,122 @@ function setWaLink(ids, href) {
   });
 }
 
-// Save khatm to localStorage
-function saveKhatmLocal(khatm) {
-  const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-  const idx = all.findIndex(k => k.code === khatm.code);
-  if (idx >= 0) all[idx] = khatm; else all.push(khatm);
-  localStorage.setItem('mqt_khatms', JSON.stringify(all));
+function showError(message) {
+  alert(`❌ ${message}`);
 }
 
-function generateCode() {
-  return Math.random().toString(36).substring(2,7).toUpperCase();
+// ── DRAWER ────────────────────────────────────
+
+function openDrawer() {
+  document.getElementById('drawer')?.classList.add('open');
+  document.getElementById('overlay')?.classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer')?.classList.remove('open');
+  document.getElementById('overlay')?.classList.remove('open');
 }
 
-// ─────────────────────────────────────────────
+// ==============================================
 //  KHATM PAGE
-// ─────────────────────────────────────────────
+// ==============================================
+
 let activeKhatm = null;
 
-function initKhatmPage() {
-  const kParam = getParam('k');
-  if (kParam) {
-    const khatm = decodeKhatm(kParam);
-    if (!khatm) { showKhatmForm(); return; }
-    activeKhatm = khatm;
-    saveKhatmLocal(khatm);
-    showKhatmView(khatm);
+async function initKhatmPage() {
+  const code = getParam('k');
+  if (code) {
+    showKhatmLoading();
+    try {
+      const rows = await sbFetch(`khatms?id=eq.${code}&select=*`);
+      if (!rows || rows.length === 0) {
+        showKhatmError('Khatm not found. The code may be incorrect.');
+        return;
+      }
+      activeKhatm = rows[0];
+      showKhatmView(activeKhatm);
+    } catch (e) {
+      showKhatmError('Could not load Khatm. Please check your connection.');
+    }
     return;
   }
   showKhatmForm();
 }
 
+function showKhatmLoading() {
+  document.getElementById('khatmFormSection').style.display = 'none';
+  document.getElementById('khatmView').style.display = 'none';
+  let loader = document.getElementById('khatmLoader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'khatmLoader';
+    loader.className = 'page-body';
+    loader.innerHTML = `<div class="card fade-up"><div class="card-body" style="text-align:center;padding:2rem;">
+      <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--teal);"></i>
+      <p style="margin-top:1rem;color:var(--text-soft);">Loading Khatm…</p>
+    </div></div>`;
+    document.querySelector('.page-hero').after(loader);
+  }
+  loader.style.display = 'block';
+}
+
+function hideKhatmLoading() {
+  const loader = document.getElementById('khatmLoader');
+  if (loader) loader.style.display = 'none';
+}
+
+function showKhatmError(msg) {
+  hideKhatmLoading();
+  document.getElementById('khatmView').style.display = 'block';
+  document.getElementById('khatmView').innerHTML = `
+    <div class="card fade-up" style="margin:1rem;">
+      <div class="card-body" style="text-align:center;padding:2rem 1rem;">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
+        <div style="font-family:Georgia,serif;font-weight:700;color:var(--teal);font-size:1.1rem;margin-bottom:0.5rem;">${msg}</div>
+        <a href="quraan.html" class="btn btn-primary" style="margin-top:1rem;">Start a New Khatm</a>
+      </div>
+    </div>`;
+}
+
 function showKhatmForm() {
+  hideKhatmLoading();
   document.getElementById('khatmFormSection').style.display = 'block';
   document.getElementById('khatmView').style.display = 'none';
 }
 
 function showKhatmView(khatm) {
+  hideKhatmLoading();
   document.getElementById('khatmFormSection').style.display = 'none';
   document.getElementById('khatmView').style.display = 'block';
   renderKhatm(khatm);
 }
 
-function createKhatmFromPage() {
+async function createKhatmFromPage() {
   const desc = document.getElementById('khatmDescPage').value.trim();
   if (!desc) { alert('Please enter a name for your Khatm first.'); return; }
-  const khatm = {
-    code: generateCode(),
-    description: desc,
-    createdAt: new Date().toISOString(),
-    paras: Array.from({length: 30}, (_, i) => ({
-      number: i + 1, assignedTo: '', completed: false
-    }))
-  };
-  activeKhatm = khatm;
-  saveKhatmLocal(khatm);
-  window.history.replaceState({}, '', `quraan.html?k=${encodeKhatm(khatm)}`);
-  showKhatmView(khatm);
+
+  const btn = document.querySelector('#khatmFormSection .btn-primary');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating…';
+
+  const code = generateCode();
+  const paras = Array.from({ length: 30 }, (_, i) => ({
+    number: i + 1, assignedTo: '', completed: false
+  }));
+
+  try {
+    await sbFetch('khatms', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ id: code, description: desc, paras })
+    });
+    activeKhatm = { id: code, description: desc, paras };
+    window.history.replaceState({}, '', `quraan.html?k=${code}`);
+    showKhatmView(activeKhatm);
+  } catch (e) {
+    showError('Could not create Khatm. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-plus"></i> Create & Share';
+  }
 }
 
 function renderKhatm(khatm) {
@@ -138,14 +193,13 @@ function renderKhatm(khatm) {
 
   if (done === 30) document.getElementById('khatmComplete').style.display = 'block';
 
-  // Keep URL bar in sync
-  window.history.replaceState({}, '', `quraan.html?k=${encodeKhatm(khatm)}`);
+  // Update URL to short code only
+  window.history.replaceState({}, '', `quraan.html?k=${khatm.id}`);
 
-  // Update both WhatsApp anchor tags
-  const link = buildKhatmShareLink(khatm);
-  const msg  = `📖 *${khatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
-  const href = buildWaHref(msg, link);
-  setWaLink(['khatmWaBtn', 'khatmWaBtnBottom'], href);
+  // Single WhatsApp share link
+  const shareUrl = `${APP_DOMAIN}/quraan.html?k=${khatm.id}`;
+  const msg = `📖 *${khatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
+  setWaLink('khatmWaBtn', buildWaHref(msg, shareUrl));
 
   // Paras grid
   const grid = document.getElementById('parasGrid');
@@ -153,7 +207,7 @@ function renderKhatm(khatm) {
     if (para.completed) {
       return `<div class="para-tile completed unavailable">
         <span class="para-num">${para.number}</span>
-        <span class="para-name">${PARA_NAMES[para.number-1]}</span>
+        <span class="para-name">${PARA_NAMES[para.number - 1]}</span>
         <span class="para-tick">✓</span>
         <span class="para-who">${para.assignedTo}</span>
       </div>`;
@@ -161,141 +215,185 @@ function renderKhatm(khatm) {
     if (para.assignedTo) {
       return `<div class="para-tile assigned" onclick="markDone(${para.number})">
         <span class="para-num">${para.number}</span>
-        <span class="para-name">${PARA_NAMES[para.number-1]}</span>
+        <span class="para-name">${PARA_NAMES[para.number - 1]}</span>
         <span class="para-who">${para.assignedTo}</span>
         <span style="font-size:0.58rem;color:var(--gold-dark);margin-top:0.2rem;display:block;font-weight:700;">Tap → done</span>
       </div>`;
     }
     return `<div class="para-tile available" onclick="claimPara(${para.number})">
       <span class="para-num">${para.number}</span>
-      <span class="para-name">${PARA_NAMES[para.number-1]}</span>
+      <span class="para-name">${PARA_NAMES[para.number - 1]}</span>
       <span style="font-size:0.58rem;color:var(--teal-mid);margin-top:0.25rem;display:block;font-weight:700;">Tap to claim</span>
     </div>`;
   }).join('');
 }
 
-function claimPara(num) {
+async function claimPara(num) {
   if (!activeKhatm) return;
   const name = document.getElementById('yourName').value.trim();
   if (!name) { alert('Please enter your name first!'); document.getElementById('yourName').focus(); return; }
+
   const para = activeKhatm.paras.find(p => p.number === num);
   if (!para || para.assignedTo) return;
+
   para.assignedTo = name;
-  saveKhatmLocal(activeKhatm);
-  renderKhatm(activeKhatm);
+
+  try {
+    await sbFetch(`khatms?id=eq.${activeKhatm.id}`, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ paras: activeKhatm.paras })
+    });
+    renderKhatm(activeKhatm);
+  } catch (e) {
+    para.assignedTo = ''; // rollback
+    showError('Could not claim para. Please try again.');
+  }
 }
 
-function markDone(num) {
+async function markDone(num) {
   if (!activeKhatm) return;
   const para = activeKhatm.paras.find(p => p.number === num);
   if (!para) return;
   if (!confirm(`Mark Para ${num} as complete?`)) return;
+
   para.completed = true;
-  saveKhatmLocal(activeKhatm);
-  renderKhatm(activeKhatm);
+
+  try {
+    await sbFetch(`khatms?id=eq.${activeKhatm.id}`, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ paras: activeKhatm.paras })
+    });
+    renderKhatm(activeKhatm);
+  } catch (e) {
+    para.completed = false; // rollback
+    showError('Could not mark para as done. Please try again.');
+  }
 }
 
 function copyKhatmLink() {
   if (!activeKhatm) return;
-  const link = buildKhatmShareLink(activeKhatm);
+  const link = `${APP_DOMAIN}/quraan.html?k=${activeKhatm.id}`;
   navigator.clipboard.writeText(link).then(() => {
     const btn = document.getElementById('copyLinkBtn');
     if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy Link', 1800); }
   });
 }
 
-// ─────────────────────────────────────────────
+// ==============================================
 //  HOME PAGE
-// ─────────────────────────────────────────────
+// ==============================================
+
 function initHomePage() {
-  const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-  const section = document.getElementById('myKhatmsSection');
-  const list    = document.getElementById('myKhatmsList');
-  if (!all.length || !section) return;
-  section.style.display = 'block';
-  list.innerHTML = all.map(k => {
-    const done = k.paras.filter(p => p.completed).length;
-    const pct  = Math.round((done / 30) * 100);
-    const encoded = encodeKhatm(k);
-    return `<a href="quraan.html?k=${encoded}" class="khatm-row">
-      <div class="khatm-row-icon"><i class="fas fa-book-quran"></i></div>
-      <div class="khatm-row-info">
-        <div class="khatm-row-name">${k.description}</div>
-        <div class="khatm-row-meta">${done}/30 paras done</div>
-        <div class="progress-wrap" style="margin-top:0.35rem;height:6px;">
-          <div class="progress-fill" style="width:${pct}%"></div>
-        </div>
-      </div>
-      <div class="khatm-row-pct">${pct}%</div>
-    </a>`;
-  }).join('');
+  // Home page shows static cards only — no localStorage needed
+  // Khatms are accessed via shared short code links
 }
 
-// ─────────────────────────────────────────────
+// ==============================================
 //  ZIKR PAGE
-// ─────────────────────────────────────────────
-let zikrSession       = 0;
-let currentZikr       = null;
+// ==============================================
+
+let zikrSession     = 0;
+let currentZikr     = null;
 let standaloneSession = 0;
 
-function initZikrPage() {
-  const zParam = getParam('z');
+async function initZikrPage() {
+  const code = getParam('z');
 
-  if (zParam) {
-    document.getElementById('zikrFormSection').style.display = 'none';
-    document.getElementById('zikrView').style.display        = 'none';
-
-    const zikr = decodeZikr(zParam);
-
-    if (!zikr) {
+  if (code) {
+    showZikrLoading();
+    try {
+      const rows = await sbFetch(`zikr_counters?id=eq.${code}&select=*`);
+      if (!rows || rows.length === 0) {
+        showZikrError('Zikr counter not found.');
+        return;
+      }
+      currentZikr = rows[0];
+      document.getElementById('zikrFormSection').style.display = 'none';
       document.getElementById('zikrView').style.display = 'block';
-      document.getElementById('zikrView').innerHTML = `
-        <div class="card fade-up" style="margin:1rem;">
-          <div class="card-body" style="text-align:center;padding:2rem 1rem;">
-            <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
-            <div style="font-family:Georgia,serif;font-weight:700;color:var(--teal);font-size:1.1rem;margin-bottom:0.5rem;">
-              Link could not be loaded
-            </div>
-            <p style="font-size:0.85rem;color:var(--text-soft);margin-bottom:1.25rem;">
-              WhatsApp may have broken this link. Ask the organiser
-              to tap <strong>Copy Link</strong> and paste it directly.
-            </p>
-            <a href="zikr.html" class="btn btn-primary">Start a new counter</a>
-          </div>
-        </div>`;
-      return;
+      hideZikrLoading();
+      renderZikr(currentZikr);
+    } catch (e) {
+      showZikrError('Could not load Zikr counter. Please check your connection.');
     }
-
-    currentZikr = zikr;
-    document.getElementById('zikrView').style.display = 'block';
-    renderZikr(zikr);
     return;
   }
 
   showZikrForm();
 }
 
+function showZikrLoading() {
+  document.getElementById('zikrFormSection').style.display = 'none';
+  document.getElementById('zikrView').style.display = 'none';
+  let loader = document.getElementById('zikrLoader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'zikrLoader';
+    loader.className = 'page-body';
+    loader.innerHTML = `<div class="card fade-up"><div class="card-body" style="text-align:center;padding:2rem;">
+      <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--teal);"></i>
+      <p style="margin-top:1rem;color:var(--text-soft);">Loading Zikr…</p>
+    </div></div>`;
+    document.querySelector('.page-hero').after(loader);
+  }
+  loader.style.display = 'block';
+}
+
+function hideZikrLoading() {
+  const loader = document.getElementById('zikrLoader');
+  if (loader) loader.style.display = 'none';
+}
+
+function showZikrError(msg) {
+  hideZikrLoading();
+  document.getElementById('zikrView').style.display = 'block';
+  document.getElementById('zikrView').innerHTML = `
+    <div class="card fade-up" style="margin:1rem;">
+      <div class="card-body" style="text-align:center;padding:2rem 1rem;">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
+        <div style="font-family:Georgia,serif;font-weight:700;color:var(--teal);font-size:1.1rem;margin-bottom:0.5rem;">${msg}</div>
+        <a href="zikr.html" class="btn btn-primary" style="margin-top:1rem;">Start a New Counter</a>
+      </div>
+    </div>`;
+}
+
 function showZikrForm() {
+  hideZikrLoading();
   document.getElementById('zikrFormSection').style.display = 'block';
-  document.getElementById('zikrView').style.display        = 'none';
+  document.getElementById('zikrView').style.display = 'none';
   const saved = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
   const el = document.getElementById('standaloneSaved');
   if (el) el.textContent = saved.toLocaleString();
 }
 
-function createZikrFromPage() {
+async function createZikrFromPage() {
   const desc   = document.getElementById('zikrDescPage').value.trim();
   const target = parseInt(document.getElementById('zikrTargetPage').value) || 100;
   if (!desc) { alert('Please enter what you are counting.'); return; }
-  const zikr = {
-    code: generateCode(), description: desc, target,
-    total: 0, contributions: [], createdAt: new Date().toISOString()
-  };
-  currentZikr = zikr;
-  window.history.replaceState({}, '', `zikr.html?z=${encodeZikr(zikr)}`);
-  document.getElementById('zikrFormSection').style.display = 'none';
-  document.getElementById('zikrView').style.display        = 'block';
-  renderZikr(zikr);
+
+  const btn = document.querySelector('#zikrFormSection .btn-primary');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating…';
+
+  const code = generateCode();
+
+  try {
+    await sbFetch('zikr_counters', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ id: code, description: desc, target, total: 0, contributions: [] })
+    });
+    currentZikr = { id: code, description: desc, target, total: 0, contributions: [] };
+    window.history.replaceState({}, '', `zikr.html?z=${code}`);
+    document.getElementById('zikrFormSection').style.display = 'none';
+    document.getElementById('zikrView').style.display = 'block';
+    renderZikr(currentZikr);
+  } catch (e) {
+    showError('Could not create Zikr counter. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-plus"></i> Create Group Counter';
+  }
 }
 
 function renderZikr(zikr) {
@@ -303,8 +401,8 @@ function renderZikr(zikr) {
   document.getElementById('zikrTotalCount').textContent    = zikr.total.toLocaleString();
   document.getElementById('zikrTargetDisplay').textContent = zikr.target.toLocaleString();
   const pct = Math.min(100, Math.round((zikr.total / zikr.target) * 100));
-  document.getElementById('zikrProgressFill').style.width  = pct + '%';
-  document.getElementById('zikrProgressPct').textContent   = pct + '%';
+  document.getElementById('zikrProgressFill').style.width = pct + '%';
+  document.getElementById('zikrProgressPct').textContent  = pct + '%';
 
   const el = document.getElementById('zikrContributions');
   el.innerHTML = zikr.contributions.length === 0
@@ -313,12 +411,11 @@ function renderZikr(zikr) {
         `<div class="contrib-item"><span class="contrib-name">${c.name}</span><span class="contrib-count">${c.count.toLocaleString()}</span></div>`
       ).join('');
 
-  window.history.replaceState({}, '', `zikr.html?z=${encodeZikr(zikr)}`);
+  window.history.replaceState({}, '', `zikr.html?z=${zikr.id}`);
 
-  // Update WhatsApp anchor href
-  const link = buildZikrShareLink(zikr);
-  const msg  = `🤲 *${zikr.description}* — Group Zikr\nTotal: ${zikr.total}/${zikr.target}. Tap to join:`;
-  setWaLink('zikrWaBtn', buildWaHref(msg, link));
+  const shareUrl = `${APP_DOMAIN}/zikr.html?z=${zikr.id}`;
+  const msg = `🤲 *${zikr.description}* — Group Zikr\nTotal: ${zikr.total}/${zikr.target}. Tap to join:`;
+  setWaLink('zikrWaBtn', buildWaHref(msg, shareUrl));
 }
 
 function tapZikr() {
@@ -328,19 +425,42 @@ function tapZikr() {
   el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 250);
 }
 
-function saveZikrSession() {
+async function saveZikrSession() {
   if (zikrSession === 0) { alert('Tap the button first to count!'); return; }
   const name = document.getElementById('zikrYourName').value.trim() || 'Anonymous';
   if (!currentZikr) return;
+
+  const btn = document.querySelector('#zikrView .btn-primary');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
   currentZikr.total += zikrSession;
   const ex = currentZikr.contributions.find(c => c.name === name);
-  if (ex) ex.count += zikrSession; else currentZikr.contributions.push({ name, count: zikrSession });
-  zikrSession = 0;
-  document.getElementById('zikrSessionCount').textContent = '0';
-  renderZikr(currentZikr);
+  if (ex) ex.count += zikrSession;
+  else currentZikr.contributions.push({ name, count: zikrSession });
+
+  try {
+    await sbFetch(`zikr_counters?id=eq.${currentZikr.id}`, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ total: currentZikr.total, contributions: currentZikr.contributions })
+    });
+    zikrSession = 0;
+    document.getElementById('zikrSessionCount').textContent = '0';
+    renderZikr(currentZikr);
+  } catch (e) {
+    // rollback
+    currentZikr.total -= zikrSession;
+    if (ex) ex.count -= zikrSession;
+    else currentZikr.contributions.pop();
+    showError('Could not save. Please try again.');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save My Count';
 }
 
-// ── STANDALONE TASBEEH ──────────────────────
+// ── STANDALONE TASBEEH (localStorage — personal only) ──
 function tapStandalone() {
   standaloneSession++;
   const el = document.getElementById('standaloneCount');
@@ -353,7 +473,7 @@ function saveStandalone() {
   const newTotal = prev + standaloneSession;
   localStorage.setItem('mqt_standalone_total', newTotal);
   standaloneSession = 0;
-  ['standaloneCount','standaloneSession'].forEach(id => {
+  ['standaloneCount', 'standaloneSession'].forEach(id => {
     const e = document.getElementById(id); if (e) e.textContent = '0';
   });
   const saved = document.getElementById('standaloneSaved');
@@ -363,45 +483,36 @@ function resetStandalone() {
   if (!confirm('Reset all counts?')) return;
   standaloneSession = 0;
   localStorage.removeItem('mqt_standalone_total');
-  ['standaloneCount','standaloneSession','standaloneSaved'].forEach(id => {
+  ['standaloneCount', 'standaloneSession', 'standaloneSaved'].forEach(id => {
     const e = document.getElementById(id); if (e) e.textContent = '0';
   });
 }
 
-// ─────────────────────────────────────────────
+// ==============================================
 //  YAASEEN PAGE
-// ─────────────────────────────────────────────
+// ==============================================
+
 let yaaseenSession = 0;
 let currentYaaseen = null;
 
-function initYaaseenPage() {
-  const yParam = getParam('y');
+async function initYaaseenPage() {
+  const code = getParam('y');
 
-  if (yParam) {
-    document.getElementById('yaaseenFormSection').style.display = 'none';
-    document.getElementById('yaaseenView').style.display        = 'none';
-
+  if (code) {
+    showYaaseenLoading();
     try {
-      const y = JSON.parse(decodeURIComponent(escape(atob(yParam))));
-      currentYaaseen = y;
+      const rows = await sbFetch(`yaaseen_counters?id=eq.${code}&select=*`);
+      if (!rows || rows.length === 0) {
+        showYaaseenError('Yaaseen counter not found.');
+        return;
+      }
+      currentYaaseen = rows[0];
+      document.getElementById('yaaseenFormSection').style.display = 'none';
       document.getElementById('yaaseenView').style.display = 'block';
-      renderYaaseen(y);
-    } catch(e) {
-      document.getElementById('yaaseenView').style.display = 'block';
-      document.getElementById('yaaseenView').innerHTML = `
-        <div class="card fade-up" style="margin:1rem;">
-          <div class="card-body" style="text-align:center;padding:2rem 1rem;">
-            <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
-            <div style="font-family:Georgia,serif;font-weight:700;color:var(--gold-dark);font-size:1.1rem;margin-bottom:0.5rem;">
-              Link could not be loaded
-            </div>
-            <p style="font-size:0.85rem;color:var(--text-soft);margin-bottom:1.25rem;">
-              WhatsApp may have broken this link. Ask the organiser
-              to tap <strong>Copy Link</strong> and paste it directly.
-            </p>
-            <a href="yaaseencounts.html" class="btn btn-gold">Start a new counter</a>
-          </div>
-        </div>`;
+      hideYaaseenLoading();
+      renderYaaseen(currentYaaseen);
+    } catch (e) {
+      showYaaseenError('Could not load Yaaseen counter. Please check your connection.');
     }
     return;
   }
@@ -409,22 +520,74 @@ function initYaaseenPage() {
   showYaaseenForm();
 }
 
-function showYaaseenForm() {
-  document.getElementById('yaaseenFormSection').style.display = 'block';
-  document.getElementById('yaaseenView').style.display        = 'none';
+function showYaaseenLoading() {
+  document.getElementById('yaaseenFormSection').style.display = 'none';
+  document.getElementById('yaaseenView').style.display = 'none';
+  let loader = document.getElementById('yaaseenLoader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'yaaseenLoader';
+    loader.className = 'page-body';
+    loader.innerHTML = `<div class="card fade-up"><div class="card-body" style="text-align:center;padding:2rem;">
+      <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--gold-dark);"></i>
+      <p style="margin-top:1rem;color:var(--text-soft);">Loading Yaaseen Counter…</p>
+    </div></div>`;
+    document.querySelector('.page-hero').after(loader);
+  }
+  loader.style.display = 'block';
 }
 
-function createYaaseenFromPage() {
+function hideYaaseenLoading() {
+  const loader = document.getElementById('yaaseenLoader');
+  if (loader) loader.style.display = 'none';
+}
+
+function showYaaseenError(msg) {
+  hideYaaseenLoading();
+  document.getElementById('yaaseenView').style.display = 'block';
+  document.getElementById('yaaseenView').innerHTML = `
+    <div class="card fade-up" style="margin:1rem;">
+      <div class="card-body" style="text-align:center;padding:2rem 1rem;">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
+        <div style="font-family:Georgia,serif;font-weight:700;color:var(--gold-dark);font-size:1.1rem;margin-bottom:0.5rem;">${msg}</div>
+        <a href="yaaseencounts.html" class="btn btn-gold" style="margin-top:1rem;">Start a New Counter</a>
+      </div>
+    </div>`;
+}
+
+function showYaaseenForm() {
+  hideYaaseenLoading();
+  document.getElementById('yaaseenFormSection').style.display = 'block';
+  document.getElementById('yaaseenView').style.display = 'none';
+}
+
+async function createYaaseenFromPage() {
   const desc   = document.getElementById('yaaseenDescPage').value.trim();
   const target = parseInt(document.getElementById('yaaseenTargetPage').value) || 41;
   if (!desc) { alert('Please enter a description.'); return; }
-  const y = { code: generateCode(), description: desc, target, total: 0, contributions: [], createdAt: new Date().toISOString() };
-  currentYaaseen = y;
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(y))));
-  window.history.replaceState({}, '', `yaaseencounts.html?y=${encoded}`);
-  document.getElementById('yaaseenFormSection').style.display = 'none';
-  document.getElementById('yaaseenView').style.display        = 'block';
-  renderYaaseen(y);
+
+  const btn = document.querySelector('#yaaseenFormSection .btn-gold');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating…';
+
+  const code = generateCode();
+
+  try {
+    await sbFetch('yaaseen_counters', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ id: code, description: desc, target, total: 0, contributions: [] })
+    });
+    currentYaaseen = { id: code, description: desc, target, total: 0, contributions: [] };
+    window.history.replaceState({}, '', `yaaseencounts.html?y=${code}`);
+    document.getElementById('yaaseenFormSection').style.display = 'none';
+    document.getElementById('yaaseenView').style.display = 'block';
+    renderYaaseen(currentYaaseen);
+  } catch (e) {
+    showError('Could not create Yaaseen counter. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-plus"></i> Create Counter';
+  }
 }
 
 function renderYaaseen(y) {
@@ -432,7 +595,7 @@ function renderYaaseen(y) {
   document.getElementById('yaaseenTotal').textContent         = y.total;
   document.getElementById('yaaseenTargetDisplay').textContent = y.target;
   const pct = Math.min(100, Math.round((y.total / y.target) * 100));
-  document.getElementById('yaaseenProgressFill').style.width  = pct + '%';
+  document.getElementById('yaaseenProgressFill').style.width = pct + '%';
 
   const list = document.getElementById('yaaseenContributions');
   list.innerHTML = y.contributions.length === 0
@@ -441,13 +604,11 @@ function renderYaaseen(y) {
         `<div class="contrib-item"><span class="contrib-name">${c.name}</span><span class="contrib-count">${c.count}</span></div>`
       ).join('');
 
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(y))));
-  window.history.replaceState({}, '', `yaaseencounts.html?y=${encoded}`);
+  window.history.replaceState({}, '', `yaaseencounts.html?y=${y.id}`);
 
-  // Update WhatsApp anchor href
-  const link = buildYaaseenShareLink(y);
-  const msg  = `⭐ *${y.description}* — Yaaseen Counter\nTotal: ${y.total}/${y.target}. Tap to join:`;
-  setWaLink('yaaseenWaBtn', buildWaHref(msg, link));
+  const shareUrl = `${APP_DOMAIN}/yaaseencounts.html?y=${y.id}`;
+  const msg = `⭐ *${y.description}* — Yaaseen Counter\nTotal: ${y.total}/${y.target}. Tap to join:`;
+  setWaLink('yaaseenWaBtn', buildWaHref(msg, shareUrl));
 }
 
 function tapYaaseen() {
@@ -456,26 +617,37 @@ function tapYaaseen() {
   if (el) { el.textContent = yaaseenSession; el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 250); }
 }
 
-function saveYaaseenSession() {
+async function saveYaaseenSession() {
   if (yaaseenSession === 0) { alert('Tap the button first!'); return; }
   const name = document.getElementById('yaaseenYourName').value.trim() || 'Anonymous';
   if (!currentYaaseen) return;
+
+  const btn = document.querySelector('#yaaseenView .btn-gold');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
   currentYaaseen.total += yaaseenSession;
   const ex = currentYaaseen.contributions.find(c => c.name === name);
-  if (ex) ex.count += yaaseenSession; else currentYaaseen.contributions.push({ name, count: yaaseenSession });
-  yaaseenSession = 0;
-  const el = document.getElementById('yaaseenSession'); if (el) el.textContent = '0';
-  renderYaaseen(currentYaaseen);
-}
+  if (ex) ex.count += yaaseenSession;
+  else currentYaaseen.contributions.push({ name, count: yaaseenSession });
 
-// ─────────────────────────────────────────────
-//  DRAWER
-// ─────────────────────────────────────────────
-function openDrawer() {
-  document.getElementById('drawer')?.classList.add('open');
-  document.getElementById('overlay')?.classList.add('open');
-}
-function closeDrawer() {
-  document.getElementById('drawer')?.classList.remove('open');
-  document.getElementById('overlay')?.classList.remove('open');
+  try {
+    await sbFetch(`yaaseen_counters?id=eq.${currentYaaseen.id}`, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ total: currentYaaseen.total, contributions: currentYaaseen.contributions })
+    });
+    yaaseenSession = 0;
+    const el = document.getElementById('yaaseenSession');
+    if (el) el.textContent = '0';
+    renderYaaseen(currentYaaseen);
+  } catch (e) {
+    currentYaaseen.total -= yaaseenSession;
+    if (ex) ex.count -= yaaseenSession;
+    else currentYaaseen.contributions.pop();
+    showError('Could not save. Please try again.');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save My Count';
 }

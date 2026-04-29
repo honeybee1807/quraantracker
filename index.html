@@ -640,15 +640,14 @@
               <span id="khatm-progress-pct">0%</span>
             </div>
             <div class="btn-row">
-              <button class="btn btn-wa" style="flex:1;margin-bottom:0;" onclick="shareKhatmWhatsApp()">Share on WhatsApp</button>
+              <a id="khatm-wa-btn" href="#" target="_blank" rel="noopener" class="btn btn-wa" style="flex:1;margin-bottom:0;"><i class="fab fa-whatsapp"></i> Share on WhatsApp</a>
               <button class="btn btn-ghost" id="copyKhatmBtn" onclick="copyKhatmLink()">Copy</button>
             </div>
             <p class="note">Share again after any update so everyone sees the latest.</p>
             <input type="text" class="field" id="khatm-name" placeholder="Your name…">
             <div class="section-label">30 Paras — tap to claim yours</div>
             <div class="paras-grid" id="paras-grid"></div>
-            <button class="btn btn-wa" style="margin-top:4px;" onclick="shareKhatmWhatsApp()">Share Updated Khatm</button>
-            <button class="btn btn-ghost" style="width:100%;margin-top:4px;padding:10px;" onclick="resetKhatm()">← Start New Khatm</button>
+            <button class="btn btn-ghost" style="width:100%;margin-top:8px;padding:10px;" onclick="resetKhatm()">← Start New Khatm</button>
           </div>
 
         </div>
@@ -727,7 +726,7 @@
             </div>
             <input type="text" class="field" id="zikr-name" placeholder="Your name…" style="text-align:center;">
             <button class="btn btn-teal" onclick="saveZikrSession()">Save My Count</button>
-            <button class="btn btn-wa" onclick="shareZikrWhatsApp()">Share on WhatsApp</button>
+            <a id="zikr-wa-btn" href="#" target="_blank" rel="noopener" class="btn btn-wa"><i class="fab fa-whatsapp"></i> Share on WhatsApp</a>
             <p class="note">Share after saving so your family sees your updated count.</p>
             <div class="section-label">Contributions</div>
             <div id="zikr-contributions">
@@ -783,7 +782,7 @@
             </div>
             <input type="text" class="field" id="yaaseen-name" placeholder="Your name…" style="text-align:center;">
             <button class="btn btn-teal" onclick="saveYaaseenSession()">Save My Count</button>
-            <button class="btn btn-wa" onclick="shareYaaseenWhatsApp()">Share on WhatsApp</button>
+            <a id="yaaseen-wa-btn" href="#" target="_blank" rel="noopener" class="btn btn-wa"><i class="fab fa-whatsapp"></i> Share on WhatsApp</a>
             <p class="note">Share after saving so your family sees your updated count.</p>
             <div class="section-label">Contributions</div>
             <div id="yaaseen-contributions">
@@ -821,8 +820,12 @@
 <script>
 /* =============================================
    MY QURAAN TRACKER — single page
-   All tools inline, same URL encoding as before
+   Data: Supabase. Sharing: short codes only.
    ============================================= */
+
+// 🔑 Replace with your new Supabase credentials
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
 const PARA_NAMES = [
   "Alif Lam Meem","Sayaqool","Tilkar Rusul","Lan Tana Loo",
@@ -836,68 +839,107 @@ const PARA_NAMES = [
 
 const APP_DOMAIN = 'https://myquraantracker.netlify.app';
 
-// ── HELPERS ──────────────────────────────────
-function getParam(n) { return new URLSearchParams(window.location.search).get(n); }
-function encodeData(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
-function decodeData(str) {
-  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); } catch(e) { return null; }
+// ── SUPABASE HELPER ───────────────────────────
+async function sbFetch(path, options = {}) {
+  const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...options.headers
+    }
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error(err); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
+
+// ── HELPERS ───────────────────────────────────
+function getParam(n) { return new URLSearchParams(window.location.search).get(n); }
 function generateCode() { return Math.random().toString(36).substring(2,7).toUpperCase(); }
 
-async function shortenUrl(longUrl) {
-  try {
-    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
-    if (res.ok) { const s = await res.text(); if (s.startsWith('https://tinyurl.com/')) return s; }
-  } catch(e) {}
-  return longUrl;
+function buildWaHref(text, url) {
+  return `https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`;
 }
 
-async function whatsappShare(text, url) {
-  const btns = document.querySelectorAll('.btn-wa');
-  btns.forEach(b => { b._orig = b.innerHTML; b.innerHTML = '⏳ Preparing…'; b.disabled = true; });
-  const short = await shortenUrl(url);
-  btns.forEach(b => { b.innerHTML = b._orig; b.disabled = false; });
-  window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + short)}`, '_blank');
+function setBtn(btn, html, disabled) {
+  if (!btn) return;
+  btn.innerHTML = html;
+  btn.disabled = disabled;
 }
 
-function saveKhatmLocal(khatm) {
-  const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-  const idx = all.findIndex(k => k.code === khatm.code);
-  if (idx >= 0) all[idx] = khatm; else all.push(khatm);
-  localStorage.setItem('mqt_khatms', JSON.stringify(all));
-}
-
-// ── TOOL ACCORDION ──────────────────────────
+// ── TOOL ACCORDION ────────────────────────────
 function toggleTool(name) {
   const el = document.getElementById('tool-' + name);
   const isOpen = el.classList.contains('open');
-  // close all
   document.querySelectorAll('.tool').forEach(t => t.classList.remove('open'));
   if (!isOpen) el.classList.add('open');
 }
 
-// ── KHATM ────────────────────────────────────
+// ══════════════════════════════════════════════
+//  KHATM
+// ══════════════════════════════════════════════
 let activeKhatm = null;
 
-function createKhatm() {
+async function createKhatm() {
   const desc = document.getElementById('khatmDesc').value.trim();
   if (!desc) { alert('Please enter a name for your Khatm.'); return; }
-  const khatm = {
-    code: generateCode(), description: desc,
-    createdAt: new Date().toISOString(),
-    paras: Array.from({length:30},(_,i) => ({ number:i+1, assignedTo:'', completed:false }))
-  };
-  activeKhatm = khatm;
-  saveKhatmLocal(khatm);
-  const encoded = encodeData(khatm);
-  window.history.replaceState({}, '', `?k=${encoded}`);
-  showKhatmView(khatm);
+
+  const btn = document.querySelector('#khatm-form .btn-teal');
+  setBtn(btn, '<i class="fas fa-spinner fa-spin"></i> Creating…', true);
+
+  const code = generateCode();
+  const paras = Array.from({length:30}, (_,i) => ({ number:i+1, assignedTo:'', completed:false }));
+
+  try {
+    await sbFetch('khatms', {
+      method: 'POST', prefer: 'return=minimal',
+      body: JSON.stringify({ id: code, description: desc, paras })
+    });
+    activeKhatm = { id: code, description: desc, paras };
+    window.history.replaceState({}, '', `?k=${code}`);
+    showKhatmView(activeKhatm);
+  } catch(e) {
+    alert('Could not create Khatm. Please try again.');
+    setBtn(btn, 'Create Khatm', false);
+  }
+}
+
+async function loadKhatm(code) {
+  try {
+    const rows = await sbFetch(`khatms?id=eq.${code}&select=*`);
+    if (!rows || rows.length === 0) {
+      showKhatmLoadError('Khatm not found. The code may be incorrect.');
+      return;
+    }
+    activeKhatm = rows[0];
+    showKhatmView(activeKhatm);
+  } catch(e) {
+    showKhatmLoadError('Could not load Khatm. Check your connection.');
+  }
+}
+
+function showKhatmLoadError(msg) {
+  document.getElementById('khatm-form').style.display = 'none';
+  document.getElementById('khatm-view').style.display = 'block';
+  document.getElementById('khatm-view').innerHTML = `
+    <div style="text-align:center;padding:1.5rem 0;">
+      <div style="font-size:2rem;">⚠️</div>
+      <p style="color:var(--teal);font-weight:700;margin:8px 0 4px;">${msg}</p>
+      <button class="btn btn-ghost" style="width:auto;padding:8px 20px;margin-top:8px;" onclick="resetKhatm()">← Start New Khatm</button>
+    </div>`;
 }
 
 function showKhatmView(khatm) {
   document.getElementById('khatm-form').style.display = 'none';
   document.getElementById('khatm-view').style.display = 'block';
   renderKhatm(khatm);
+  // ensure tool is open
+  document.querySelectorAll('.tool').forEach(t => t.classList.remove('open'));
+  document.getElementById('tool-khatm').classList.add('open');
 }
 
 function resetKhatm() {
@@ -906,7 +948,6 @@ function resetKhatm() {
   document.getElementById('khatm-form').style.display = 'block';
   document.getElementById('khatm-view').style.display = 'none';
   document.getElementById('khatmDesc').value = '';
-  loadMyKhatms();
 }
 
 function renderKhatm(khatm) {
@@ -917,8 +958,16 @@ function renderKhatm(khatm) {
   document.getElementById('khatm-progress-text').textContent = `${done} of 30 paras done`;
   document.getElementById('khatm-progress-pct').textContent  = pct + '%';
   document.getElementById('khatm-complete-banner').style.display = done===30 ? 'block' : 'none';
-  const encoded = encodeData(khatm);
-  window.history.replaceState({}, '', `?k=${encoded}`);
+
+  // Short code in URL only
+  window.history.replaceState({}, '', `?k=${khatm.id}`);
+
+  // WhatsApp link — short URL, no encoding
+  const shareUrl = `${APP_DOMAIN}/?k=${khatm.id}`;
+  const msg = `📖 *${khatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
+  const waBtn = document.getElementById('khatm-wa-btn');
+  if (waBtn) waBtn.href = buildWaHref(msg, shareUrl);
+
   const grid = document.getElementById('paras-grid');
   grid.innerHTML = khatm.paras.map(para => {
     if (para.completed) return `
@@ -944,81 +993,55 @@ function renderKhatm(khatm) {
   }).join('');
 }
 
-function claimPara(num) {
+async function claimPara(num) {
   if (!activeKhatm) return;
   const name = document.getElementById('khatm-name').value.trim();
   if (!name) { alert('Please enter your name first!'); document.getElementById('khatm-name').focus(); return; }
   const para = activeKhatm.paras.find(p => p.number===num);
   if (!para || para.assignedTo) return;
   para.assignedTo = name;
-  saveKhatmLocal(activeKhatm);
-  renderKhatm(activeKhatm);
+  try {
+    await sbFetch(`khatms?id=eq.${activeKhatm.id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ paras: activeKhatm.paras })
+    });
+    renderKhatm(activeKhatm);
+  } catch(e) {
+    para.assignedTo = '';
+    alert('Could not claim para. Please try again.');
+  }
 }
 
-function markParaDone(num) {
+async function markParaDone(num) {
   if (!activeKhatm) return;
   if (!confirm(`Mark Para ${num} as complete?`)) return;
   const para = activeKhatm.paras.find(p => p.number===num);
   if (!para) return;
   para.completed = true;
-  saveKhatmLocal(activeKhatm);
-  renderKhatm(activeKhatm);
-}
-
-function shareKhatmWhatsApp() {
-  if (!activeKhatm) return;
-  const encoded = encodeData(activeKhatm);
-  const link = `${APP_DOMAIN}/?k=${encoded}`;
-  const done  = activeKhatm.paras.filter(p=>p.completed).length;
-  const msg   = `📖 *${activeKhatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
-  whatsappShare(msg, link);
+  try {
+    await sbFetch(`khatms?id=eq.${activeKhatm.id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ paras: activeKhatm.paras })
+    });
+    renderKhatm(activeKhatm);
+  } catch(e) {
+    para.completed = false;
+    alert('Could not mark para as done. Please try again.');
+  }
 }
 
 function copyKhatmLink() {
   if (!activeKhatm) return;
-  const encoded = encodeData(activeKhatm);
-  const link = `${APP_DOMAIN}/?k=${encoded}`;
+  const link = `${APP_DOMAIN}/?k=${activeKhatm.id}`;
   navigator.clipboard.writeText(link).then(() => {
     const btn = document.getElementById('copyKhatmBtn');
     if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy', 1800); }
   });
 }
 
-function loadMyKhatms() {
-  const all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
-  const wrap = document.getElementById('myKhatmsWrap');
-  const list = document.getElementById('myKhatmsList');
-  if (!all.length) { if(wrap) wrap.style.display='none'; return; }
-  if(wrap) wrap.style.display='block';
-  list.innerHTML = all.map(k => {
-    const done = k.paras.filter(p=>p.completed).length;
-    const pct  = Math.round((done/30)*100);
-    const enc  = encodeData(k);
-    return `<div class="khatm-row" onclick="loadKhatmFromHistory('${enc}')">
-      <div class="khatm-row-icon">📖</div>
-      <div style="flex:1;">
-        <div class="khatm-row-name">${k.description}</div>
-        <div class="khatm-row-meta">${done}/30 paras done</div>
-        <div class="progress-wrap" style="margin-top:4px;height:5px;"><div class="progress-fill" style="width:${pct}%"></div></div>
-      </div>
-      <div class="khatm-row-pct">${pct}%</div>
-    </div>`;
-  }).join('');
-}
-
-function loadKhatmFromHistory(enc) {
-  const khatm = decodeData(enc);
-  if (!khatm) return;
-  activeKhatm = khatm;
-  const encoded = encodeData(khatm);
-  window.history.replaceState({}, '', `?k=${encoded}`);
-  showKhatmView(khatm);
-  // Make sure khatm tool is open
-  document.querySelectorAll('.tool').forEach(t => t.classList.remove('open'));
-  document.getElementById('tool-khatm').classList.add('open');
-}
-
-// ── ZIKR ─────────────────────────────────────
+// ══════════════════════════════════════════════
+//  ZIKR
+// ══════════════════════════════════════════════
 let standaloneSession = 0;
 let zikrSession  = 0;
 let currentZikr  = null;
@@ -1050,17 +1073,43 @@ function resetStandalone() {
   });
 }
 
-function createZikr() {
+async function createZikr() {
   const desc   = document.getElementById('zikr-desc').value.trim();
   const target = parseInt(document.getElementById('zikr-target').value) || 100;
   if (!desc) { alert('Please enter what you are counting.'); return; }
-  const zikr = { code:generateCode(), description:desc, target, total:0, contributions:[], createdAt:new Date().toISOString() };
-  currentZikr = zikr;
-  const encoded = encodeData(zikr);
-  window.history.replaceState({}, '', `?z=${encoded}`);
-  document.getElementById('zikr-form').style.display = 'none';
-  document.getElementById('zikr-view').style.display = 'block';
-  renderZikr(zikr);
+
+  const btn = document.querySelector('#zikr-form .btn-teal');
+  setBtn(btn, '<i class="fas fa-spinner fa-spin"></i> Creating…', true);
+
+  const code = generateCode();
+  try {
+    await sbFetch('zikr_counters', {
+      method: 'POST', prefer: 'return=minimal',
+      body: JSON.stringify({ id: code, description: desc, target, total: 0, contributions: [] })
+    });
+    currentZikr = { id: code, description: desc, target, total: 0, contributions: [] };
+    window.history.replaceState({}, '', `?z=${code}`);
+    document.getElementById('zikr-form').style.display = 'none';
+    document.getElementById('zikr-view').style.display = 'block';
+    renderZikr(currentZikr);
+  } catch(e) {
+    alert('Could not create Zikr counter. Please try again.');
+    setBtn(btn, 'Create Group Counter', false);
+  }
+}
+
+async function loadZikr(code) {
+  try {
+    const rows = await sbFetch(`zikr_counters?id=eq.${code}&select=*`);
+    if (!rows || rows.length === 0) { alert('Zikr counter not found.'); return; }
+    currentZikr = rows[0];
+    document.getElementById('zikr-form').style.display = 'none';
+    document.getElementById('zikr-view').style.display = 'block';
+    document.getElementById('tool-zikr').classList.add('open');
+    renderZikr(currentZikr);
+  } catch(e) {
+    alert('Could not load Zikr counter. Check your connection.');
+  }
 }
 
 function resetZikr() {
@@ -1073,14 +1122,19 @@ function resetZikr() {
 }
 
 function renderZikr(z) {
-  document.getElementById('zikr-view-title').textContent    = z.description;
-  document.getElementById('zikr-total').textContent         = z.total.toLocaleString();
-  document.getElementById('zikr-target-display').textContent= z.target.toLocaleString();
+  document.getElementById('zikr-view-title').textContent     = z.description;
+  document.getElementById('zikr-total').textContent          = z.total.toLocaleString();
+  document.getElementById('zikr-target-display').textContent = z.target.toLocaleString();
   const pct = Math.min(100, Math.round((z.total/z.target)*100));
-  document.getElementById('zikr-progress-fill').style.width = pct + '%';
-  document.getElementById('zikr-pct').textContent           = pct + '%';
-  const enc = encodeData(z);
-  window.history.replaceState({}, '', `?z=${enc}`);
+  document.getElementById('zikr-progress-fill').style.width  = pct + '%';
+  document.getElementById('zikr-pct').textContent            = pct + '%';
+  window.history.replaceState({}, '', `?z=${z.id}`);
+
+  const shareUrl = `${APP_DOMAIN}/?z=${z.id}`;
+  const msg = `🤲 *${z.description}* — Group Zikr\nTotal: ${z.total.toLocaleString()}/${z.target.toLocaleString()}. Tap to join:`;
+  const waBtn = document.getElementById('zikr-wa-btn');
+  if (waBtn) waBtn.href = buildWaHref(msg, shareUrl);
+
   const el = document.getElementById('zikr-contributions');
   el.innerHTML = z.contributions.length === 0
     ? '<div class="empty-state">No contributions yet — be the first!</div>'
@@ -1096,41 +1150,77 @@ function tapZikr() {
   el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 200);
 }
 
-function saveZikrSession() {
+async function saveZikrSession() {
   if (zikrSession===0) { alert('Tap first!'); return; }
   const name = document.getElementById('zikr-name').value.trim() || 'Anonymous';
   if (!currentZikr) return;
+
+  const btn = document.querySelector('#zikr-view .btn-teal');
+  setBtn(btn, '<i class="fas fa-spinner fa-spin"></i> Saving…', true);
+
   currentZikr.total += zikrSession;
   const ex = currentZikr.contributions.find(c=>c.name===name);
   if (ex) ex.count += zikrSession; else currentZikr.contributions.push({name, count:zikrSession});
-  zikrSession = 0;
-  document.getElementById('zikr-session-count').textContent = '0';
-  renderZikr(currentZikr);
+
+  try {
+    await sbFetch(`zikr_counters?id=eq.${currentZikr.id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ total: currentZikr.total, contributions: currentZikr.contributions })
+    });
+    zikrSession = 0;
+    document.getElementById('zikr-session-count').textContent = '0';
+    renderZikr(currentZikr);
+  } catch(e) {
+    currentZikr.total -= zikrSession;
+    if (ex) ex.count -= zikrSession; else currentZikr.contributions.pop();
+    alert('Could not save. Please try again.');
+  }
+  setBtn(btn, 'Save My Count', false);
 }
 
-function shareZikrWhatsApp() {
-  if (!currentZikr) return;
-  const encoded = encodeData(currentZikr);
-  const link = `${APP_DOMAIN}/?z=${encoded}`;
-  const msg  = `🤲 *${currentZikr.description}* — Group Zikr\nTotal: ${currentZikr.total.toLocaleString()}/${currentZikr.target.toLocaleString()}. Tap to join:`;
-  whatsappShare(msg, link);
-}
-
-// ── YAASEEN ──────────────────────────────────
+// ══════════════════════════════════════════════
+//  YAASEEN
+// ══════════════════════════════════════════════
 let yaaseenSession = 0;
 let currentYaaseen = null;
 
-function createYaaseen() {
+async function createYaaseen() {
   const desc   = document.getElementById('yaaseen-desc').value.trim();
   const target = parseInt(document.getElementById('yaaseen-target').value) || 41;
   if (!desc) { alert('Please enter a description.'); return; }
-  const y = { code:generateCode(), description:desc, target, total:0, contributions:[], createdAt:new Date().toISOString() };
-  currentYaaseen = y;
-  const encoded = encodeData(y);
-  window.history.replaceState({}, '', `?y=${encoded}`);
-  document.getElementById('yaaseen-form').style.display = 'none';
-  document.getElementById('yaaseen-view').style.display = 'block';
-  renderYaaseen(y);
+
+  const btn = document.querySelector('#yaaseen-form .btn-teal');
+  setBtn(btn, '<i class="fas fa-spinner fa-spin"></i> Creating…', true);
+
+  const code = generateCode();
+  try {
+    await sbFetch('yaaseen_counters', {
+      method: 'POST', prefer: 'return=minimal',
+      body: JSON.stringify({ id: code, description: desc, target, total: 0, contributions: [] })
+    });
+    currentYaaseen = { id: code, description: desc, target, total: 0, contributions: [] };
+    window.history.replaceState({}, '', `?y=${code}`);
+    document.getElementById('yaaseen-form').style.display = 'none';
+    document.getElementById('yaaseen-view').style.display = 'block';
+    renderYaaseen(currentYaaseen);
+  } catch(e) {
+    alert('Could not create Yaaseen counter. Please try again.');
+    setBtn(btn, 'Create Yaaseen Counter', false);
+  }
+}
+
+async function loadYaaseen(code) {
+  try {
+    const rows = await sbFetch(`yaaseen_counters?id=eq.${code}&select=*`);
+    if (!rows || rows.length === 0) { alert('Yaaseen counter not found.'); return; }
+    currentYaaseen = rows[0];
+    document.getElementById('yaaseen-form').style.display = 'none';
+    document.getElementById('yaaseen-view').style.display = 'block';
+    document.getElementById('tool-yaaseen').classList.add('open');
+    renderYaaseen(currentYaaseen);
+  } catch(e) {
+    alert('Could not load Yaaseen counter. Check your connection.');
+  }
 }
 
 function resetYaaseen() {
@@ -1143,13 +1233,18 @@ function resetYaaseen() {
 }
 
 function renderYaaseen(y) {
-  document.getElementById('yaaseen-view-title').textContent    = y.description;
-  document.getElementById('yaaseen-total').textContent         = y.total;
-  document.getElementById('yaaseen-target-display').textContent= y.target;
+  document.getElementById('yaaseen-view-title').textContent     = y.description;
+  document.getElementById('yaaseen-total').textContent          = y.total;
+  document.getElementById('yaaseen-target-display').textContent = y.target;
   const pct = Math.min(100, Math.round((y.total/y.target)*100));
-  document.getElementById('yaaseen-progress-fill').style.width = pct + '%';
-  const enc = encodeData(y);
-  window.history.replaceState({}, '', `?y=${enc}`);
+  document.getElementById('yaaseen-progress-fill').style.width  = pct + '%';
+  window.history.replaceState({}, '', `?y=${y.id}`);
+
+  const shareUrl = `${APP_DOMAIN}/?y=${y.id}`;
+  const msg = `⭐ *${y.description}* — Yaaseen Counter\nTotal: ${y.total}/${y.target}. Tap to join:`;
+  const waBtn = document.getElementById('yaaseen-wa-btn');
+  if (waBtn) waBtn.href = buildWaHref(msg, shareUrl);
+
   const el = document.getElementById('yaaseen-contributions');
   el.innerHTML = y.contributions.length === 0
     ? '<div class="empty-state">No contributions yet — be the first!</div>'
@@ -1165,66 +1260,52 @@ function tapYaaseen() {
   el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 200);
 }
 
-function saveYaaseenSession() {
+async function saveYaaseenSession() {
   if (yaaseenSession===0) { alert('Tap first!'); return; }
   const name = document.getElementById('yaaseen-name').value.trim() || 'Anonymous';
   if (!currentYaaseen) return;
+
+  const btn = document.querySelector('#yaaseen-view .btn-teal');
+  setBtn(btn, '<i class="fas fa-spinner fa-spin"></i> Saving…', true);
+
   currentYaaseen.total += yaaseenSession;
   const ex = currentYaaseen.contributions.find(c=>c.name===name);
   if (ex) ex.count += yaaseenSession; else currentYaaseen.contributions.push({name, count:yaaseenSession});
-  yaaseenSession = 0;
-  document.getElementById('yaaseen-session').textContent = '0';
-  renderYaaseen(currentYaaseen);
+
+  try {
+    await sbFetch(`yaaseen_counters?id=eq.${currentYaaseen.id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ total: currentYaaseen.total, contributions: currentYaaseen.contributions })
+    });
+    yaaseenSession = 0;
+    document.getElementById('yaaseen-session').textContent = '0';
+    renderYaaseen(currentYaaseen);
+  } catch(e) {
+    currentYaaseen.total -= yaaseenSession;
+    if (ex) ex.count -= yaaseenSession; else currentYaaseen.contributions.pop();
+    alert('Could not save. Please try again.');
+  }
+  setBtn(btn, 'Save My Count', false);
 }
 
-function shareYaaseenWhatsApp() {
-  if (!currentYaaseen) return;
-  const encoded = encodeData(currentYaaseen);
-  const link = `${APP_DOMAIN}/?y=${encoded}`;
-  const msg  = `⭐ *${currentYaaseen.description}* — Yaaseen Counter\nTotal: ${currentYaaseen.total}/${currentYaaseen.target}. Tap to join:`;
-  whatsappShare(msg, link);
-}
-
-// ── INIT ─────────────────────────────────────
+// ── INIT ──────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  // Load saved standalone total
   const saved = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
   document.getElementById('standalone-saved').textContent = saved.toLocaleString();
 
-  // Load my khatms in khatm tool
-  loadMyKhatms();
+  const kCode = getParam('k');
+  const zCode = getParam('z');
+  const yCode = getParam('y');
 
-  // Check URL params — open correct tool with data
-  const kParam = getParam('k');
-  const zParam = getParam('z');
-  const yParam = getParam('y');
-
-  if (kParam) {
-    const khatm = decodeData(kParam);
-    if (khatm) {
-      activeKhatm = khatm;
-      saveKhatmLocal(khatm);
-      document.getElementById('tool-khatm').classList.add('open');
-      showKhatmView(khatm);
-    }
-  } else if (zParam) {
-    const zikr = decodeData(zParam);
-    if (zikr) {
-      currentZikr = zikr;
-      document.getElementById('tool-zikr').classList.add('open');
-      document.getElementById('zikr-form').style.display = 'none';
-      document.getElementById('zikr-view').style.display = 'block';
-      renderZikr(zikr);
-    }
-  } else if (yParam) {
-    const y = decodeData(yParam);
-    if (y) {
-      currentYaaseen = y;
-      document.getElementById('tool-yaaseen').classList.add('open');
-      document.getElementById('yaaseen-form').style.display = 'none';
-      document.getElementById('yaaseen-view').style.display = 'block';
-      renderYaaseen(y);
-    }
+  if (kCode) {
+    document.getElementById('tool-khatm').classList.add('open');
+    loadKhatm(kCode);
+  } else if (zCode) {
+    document.getElementById('tool-zikr').classList.add('open');
+    loadZikr(zCode);
+  } else if (yCode) {
+    document.getElementById('tool-yaaseen').classList.add('open');
+    loadYaaseen(yCode);
   }
 });
 </script>
