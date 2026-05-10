@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="style.css">
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -809,13 +810,15 @@
     <strong>By Olideen Technologies</strong>
   </footer>
 
+<!-- Config (credentials) — must load before inline script -->
+<script src="config.js"></script>
+
 <script>
 /* =============================================
-   MY QURAAN TRACKER — single page
-   All tools inline, same URL encoding as before
+   MY QURAAN TRACKER — single page app
    ============================================= */
 
-const PARA_NAMES = [
+var PARA_NAMES = [
   "Alif Lam Meem","Sayaqool","Tilkar Rusul","Lan Tana Loo",
   "Wal Mohsanat","La Yuhibbullah","Wa Iza Samiu","Wa Lau Annana",
   "Qalal Malao","Wa A'lamu","Ya'tazeroon","Wa Ma Min Dabbah",
@@ -825,7 +828,7 @@ const PARA_NAMES = [
   "Ha Meem","Qala Fama Khatbukum","Qad Sami Allah","Tabarakallazi","Amma"
 ];
 
-const APP_DOMAIN = 'https://myquraantracker.netlify.app';
+var APP_DOMAIN = window.SUPABASE_CONFIG ? window.SUPABASE_CONFIG.appDomain : 'https://myquraantracker.netlify.app';
 
 // ── HELPERS ──────────────────────────────────
 function getParam(n) { return new URLSearchParams(window.location.search).get(n); }
@@ -1217,5 +1220,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
 </body>
 </html>

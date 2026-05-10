@@ -4,12 +4,16 @@
    Sharing: Short code via URL param only
    ============================================= */
 
-// ── SUPABASE CONFIG ───────────────────────────
-// 🔑 Replace these with your new credentials
-const SUPABASE_URL = 'https://urvddwtcdycqurrczrnl.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_bG3fICPySEzuufIHOKkZ-A_Zx2a_IKX';
 
-const APP_DOMAIN = 'https://myquraantracker.netlify.app';
+// ====================== SUPABASE SETUP ======================
+console.log('📄 script.js is running...');
+
+var SUPABASE_URL = window.SUPABASE_CONFIG.url;
+var SUPABASE_KEY = window.SUPABASE_CONFIG.key;
+var APP_DOMAIN   = window.SUPABASE_CONFIG.appDomain;
+
+console.log('✅ Config loaded — connected to:', SUPABASE_URL);
+// =========================================================
 
 const PARA_NAMES = [
   "Alif Lam Meem","Sayaqool","Tilkar Rusul","Lan Tana Loo",
