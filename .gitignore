@@ -1,0 +1,10 @@
+# Supabase keys - keep these private!
+config.js
+
+# Optional but recommended:
+.DS_Store
+Thumbs.db
+*.log
+
+# If you ever add more sensitive files later
+.env
