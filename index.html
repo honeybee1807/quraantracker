@@ -816,6 +816,634 @@
 <script>
 /* =============================================
    MY QURAAN TRACKER — single page app
+   Supabase-backed: short IDs, live DB reads/writes
+   ============================================= */
+
+var PARA_NAMES = [
+  "Alif Lam Meem","Sayaqool","Tilkar Rusul","Lan Tana Loo",
+  "Wal Mohsanat","La Yuhibbullah","Wa Iza Samiu","Wa Lau Annana",
+  "Qalal Malao","Wa A'lamu","Ya'tazeroon","Wa Ma Min Dabbah",
+  "Wa Ma Ubarri-u","Rubama","Subhanalazi","Qal Alam","Iqtaraba",
+  "Qad Aflaha","Wa Qalallazina","A'man Khalaq","Utlu Ma Oohi-a",
+  "Wa Man Yaqnut","Wa Mali-ya","Faman Azlamu","Elahe Yuraddu",
+  "Ha Meem","Qala Fama Khatbukum","Qad Sami Allah","Tabarakallazi","Amma"
+];
+
+var APP_DOMAIN = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.appDomain)
+  ? window.SUPABASE_CONFIG.appDomain
+  : 'https://myquraantracker.netlify.app';
+
+var SB_URL = window.SUPABASE_CONFIG ? window.SUPABASE_CONFIG.url : '';
+var SB_KEY = window.SUPABASE_CONFIG ? window.SUPABASE_CONFIG.key : '';
+
+// ── SUPABASE REST HELPER ──────────────────────
+async function sbFetch(path, options) {
+  options = options || {};
+  var res = await fetch(SB_URL + '/rest/v1/' + path, Object.assign({}, options, {
+    headers: Object.assign({
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation'
+    }, options.headers || {})
+  }));
+  if (!res.ok) { var e = await res.text(); throw new Error('Supabase: ' + e); }
+  var text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// ── HELPERS ──────────────────────────────────
+function getParam(n) { return new URLSearchParams(window.location.search).get(n); }
+function generateCode() { return Math.random().toString(36).substring(2,7).toUpperCase(); }
+
+function getSATimestamp() {
+  return new Date().toLocaleString('en-ZA', {
+    timeZone: 'Africa/Johannesburg',
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  });
+}
+
+function whatsappShare(text, url) {
+  var full = text + '\n🕐 Updated: ' + getSATimestamp() + ' (SA)\n' + url;
+  window.open('https://wa.me/?text=' + encodeURIComponent(full), '_blank');
+}
+
+function showLoading(btnEl, msg) {
+  if (btnEl) { btnEl._orig = btnEl.innerHTML; btnEl.innerHTML = '⏳ ' + (msg || 'Please wait…'); btnEl.disabled = true; }
+}
+function hideLoading(btnEl) {
+  if (btnEl) { btnEl.innerHTML = btnEl._orig || 'Done'; btnEl.disabled = false; }
+}
+
+// ── TOOL ACCORDION ───────────────────────────
+function toggleTool(name) {
+  var el = document.getElementById('tool-' + name);
+  var isOpen = el.classList.contains('open');
+  document.querySelectorAll('.tool').forEach(function(t) { t.classList.remove('open'); });
+  if (!isOpen) el.classList.add('open');
+}
+
+// ════════════════════════════════════════════
+//  KHATM
+// ════════════════════════════════════════════
+var activeKhatm = null;
+
+async function createKhatm() {
+  var desc = document.getElementById('khatmDesc').value.trim();
+  if (!desc) { alert('Please enter a name for your Khatm.'); return; }
+  var btn = document.querySelector('#khatm-form .btn-teal');
+  showLoading(btn, 'Creating…');
+  var id = generateCode();
+  var paras = Array.from({length:30}, function(_,i) {
+    return { number: i+1, assignedTo: '', completed: false };
+  });
+  try {
+    await sbFetch('khatms', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ id: id, description: desc, paras: paras })
+    });
+    activeKhatm = { id: id, description: desc, paras: paras };
+    window.history.replaceState({}, '', '?k=' + id);
+    showKhatmView(activeKhatm);
+    saveKhatmLocal(activeKhatm);
+  } catch(e) {
+    alert('Could not create Khatm. Check your connection.');
+    console.error(e);
+  }
+  hideLoading(btn);
+}
+
+function showKhatmView(khatm) {
+  document.getElementById('khatm-form').style.display = 'none';
+  document.getElementById('khatm-view').style.display = 'block';
+  renderKhatm(khatm);
+}
+
+function resetKhatm() {
+  activeKhatm = null;
+  window.history.replaceState({}, '', window.location.pathname);
+  document.getElementById('khatm-form').style.display = 'block';
+  document.getElementById('khatm-view').style.display = 'none';
+  document.getElementById('khatmDesc').value = '';
+  loadMyKhatms();
+}
+
+function renderKhatm(khatm) {
+  document.getElementById('khatm-view-title').textContent = khatm.description;
+  var done = khatm.paras.filter(function(p) { return p.completed; }).length;
+  var pct  = Math.round((done/30)*100);
+  document.getElementById('khatm-progress-fill').style.width = pct + '%';
+  document.getElementById('khatm-progress-text').textContent = done + ' of 30 paras done';
+  document.getElementById('khatm-progress-pct').textContent  = pct + '%';
+  document.getElementById('khatm-complete-banner').style.display = done===30 ? 'block' : 'none';
+  var grid = document.getElementById('paras-grid');
+  grid.innerHTML = khatm.paras.map(function(para) {
+    if (para.completed) return '<div class="para-tile completed">'
+      + '<span class="para-num">' + para.number + '</span>'
+      + '<span class="para-name">' + PARA_NAMES[para.number-1] + '</span>'
+      + '<span class="para-tick">✓</span>'
+      + '<span class="para-who">' + para.assignedTo + '</span></div>';
+    if (para.assignedTo) return '<div class="para-tile assigned" onclick="markParaDone(' + para.number + ')">'
+      + '<span class="para-num">' + para.number + '</span>'
+      + '<span class="para-name">' + PARA_NAMES[para.number-1] + '</span>'
+      + '<span class="para-who">' + para.assignedTo + '</span>'
+      + '<span style="font-size:0.55rem;color:var(--gold-dark);font-weight:700;margin-top:2px;display:block;">Tap → done</span></div>';
+    return '<div class="para-tile available" onclick="claimPara(' + para.number + ')">'
+      + '<span class="para-num">' + para.number + '</span>'
+      + '<span class="para-name">' + PARA_NAMES[para.number-1] + '</span>'
+      + '<span style="font-size:0.55rem;color:var(--teal-mid);font-weight:700;margin-top:2px;display:block;">Tap to claim</span></div>';
+  }).join('');
+}
+
+async function claimPara(num) {
+  if (!activeKhatm) return;
+  var name = document.getElementById('khatm-name').value.trim();
+  if (!name) { alert('Please enter your name first!'); document.getElementById('khatm-name').focus(); return; }
+  var para = activeKhatm.paras.find(function(p) { return p.number===num; });
+  if (!para || para.assignedTo) return;
+  para.assignedTo = name;
+  renderKhatm(activeKhatm); // optimistic UI
+  try {
+    await sbFetch('khatms?id=eq.' + activeKhatm.id, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ paras: activeKhatm.paras })
+    });
+    saveKhatmLocal(activeKhatm);
+  } catch(e) {
+    para.assignedTo = '';
+    renderKhatm(activeKhatm);
+    alert('Could not claim para. Please try again.');
+  }
+}
+
+async function markParaDone(num) {
+  if (!activeKhatm) return;
+  if (!confirm('Mark Para ' + num + ' as complete?')) return;
+  var para = activeKhatm.paras.find(function(p) { return p.number===num; });
+  if (!para) return;
+  para.completed = true;
+  renderKhatm(activeKhatm); // optimistic UI
+  try {
+    await sbFetch('khatms?id=eq.' + activeKhatm.id, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ paras: activeKhatm.paras })
+    });
+    saveKhatmLocal(activeKhatm);
+  } catch(e) {
+    para.completed = false;
+    renderKhatm(activeKhatm);
+    alert('Could not mark as done. Please try again.');
+  }
+}
+
+function shareKhatmWhatsApp() {
+  if (!activeKhatm) return;
+  var link = APP_DOMAIN + '/?k=' + activeKhatm.id;
+  var done = activeKhatm.paras.filter(function(p) { return p.completed; }).length;
+  whatsappShare('📖 *' + activeKhatm.description + '* — Quraan Khatm\n' + done + '/30 paras done. Tap to join and claim yours:', link);
+}
+
+function copyKhatmLink() {
+  if (!activeKhatm) return;
+  var link = APP_DOMAIN + '/?k=' + activeKhatm.id;
+  navigator.clipboard.writeText(link).then(function() {
+    var btn = document.getElementById('copyKhatmBtn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1800); }
+  });
+}
+
+// localStorage — for "My Previous Khatms" list
+function saveKhatmLocal(khatm) {
+  var all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+  var idx = all.findIndex(function(k) { return k.id === khatm.id; });
+  var entry = { id: khatm.id, description: khatm.description, paras: khatm.paras };
+  if (idx >= 0) all[idx] = entry; else all.push(entry);
+  localStorage.setItem('mqt_khatms', JSON.stringify(all));
+}
+
+function loadMyKhatms() {
+  var all = JSON.parse(localStorage.getItem('mqt_khatms') || '[]');
+  var wrap = document.getElementById('myKhatmsWrap');
+  var list = document.getElementById('myKhatmsList');
+  if (!all.length) { if (wrap) wrap.style.display = 'none'; return; }
+  if (wrap) wrap.style.display = 'block';
+  list.innerHTML = all.map(function(k) {
+    var done = k.paras.filter(function(p){ return p.completed; }).length;
+    var pct  = Math.round((done/30)*100);
+    return '<div class="khatm-row" onclick="loadKhatmById(\'' + k.id + '\')">'
+      + '<div class="khatm-row-icon">📖</div>'
+      + '<div style="flex:1;">'
+      + '<div class="khatm-row-name">' + k.description + '</div>'
+      + '<div class="khatm-row-meta">' + done + '/30 paras done</div>'
+      + '<div class="progress-wrap" style="margin-top:4px;height:5px;"><div class="progress-fill" style="width:' + pct + '%"></div></div>'
+      + '</div>'
+      + '<div class="khatm-row-pct">' + pct + '%</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function loadKhatmById(id) {
+  document.querySelectorAll('.tool').forEach(function(t) { t.classList.remove('open'); });
+  document.getElementById('tool-khatm').classList.add('open');
+  document.getElementById('khatm-form').style.display = 'none';
+  document.getElementById('khatm-view').style.display = 'block';
+  document.getElementById('khatm-view-title').textContent = 'Loading…';
+  try {
+    var rows = await sbFetch('khatms?id=eq.' + id + '&select=*');
+    if (!rows || !rows.length) { alert('Khatm not found.'); resetKhatm(); return; }
+    activeKhatm = rows[0];
+    window.history.replaceState({}, '', '?k=' + id);
+    saveKhatmLocal(activeKhatm);
+    renderKhatm(activeKhatm);
+  } catch(e) {
+    alert('Could not load Khatm. Check your connection.');
+    resetKhatm();
+  }
+}
+
+// ════════════════════════════════════════════
+//  ZIKR — standalone tasbeeh (localStorage)
+// ════════════════════════════════════════════
+var standaloneSession = 0;
+
+function tapStandalone() {
+  standaloneSession++;
+  var el = document.getElementById('standalone-count');
+  el.textContent = standaloneSession.toLocaleString();
+  el.classList.add('pop'); setTimeout(function(){ el.classList.remove('pop'); }, 200);
+  document.getElementById('standalone-session').textContent = standaloneSession.toLocaleString();
+}
+
+function saveStandalone() {
+  var prev = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
+  var newTotal = prev + standaloneSession;
+  localStorage.setItem('mqt_standalone_total', newTotal);
+  standaloneSession = 0;
+  document.getElementById('standalone-count').textContent   = '0';
+  document.getElementById('standalone-session').textContent = '0';
+  document.getElementById('standalone-saved').textContent   = newTotal.toLocaleString();
+}
+
+function resetStandalone() {
+  if (!confirm('Reset all counts?')) return;
+  standaloneSession = 0;
+  localStorage.removeItem('mqt_standalone_total');
+  ['standalone-count','standalone-session','standalone-saved'].forEach(function(id) {
+    var e = document.getElementById(id); if (e) e.textContent = '0';
+  });
+}
+
+// ════════════════════════════════════════════
+//  ZIKR — group counter (Supabase)
+// ════════════════════════════════════════════
+var zikrSession = 0;
+var currentZikr = null;
+
+async function createZikr() {
+  var desc   = document.getElementById('zikr-desc').value.trim();
+  var target = parseInt(document.getElementById('zikr-target').value) || 100;
+  if (!desc) { alert('Please enter what you are counting.'); return; }
+  var btn = document.querySelector('#zikr-form .btn-teal');
+  showLoading(btn, 'Creating…');
+  var id = generateCode();
+  try {
+    await sbFetch('zikr_counters', {
+      method: 'POST', prefer: 'return=minimal',
+      body: JSON.stringify({ id: id, description: desc, target: target, total: 0, contributions: [] })
+    });
+    currentZikr = { id: id, description: desc, target: target, total: 0, contributions: [] };
+    window.history.replaceState({}, '', '?z=' + id);
+    document.getElementById('zikr-form').style.display = 'none';
+    document.getElementById('zikr-view').style.display = 'block';
+    renderZikr(currentZikr);
+  } catch(e) {
+    alert('Could not create counter. Check your connection.');
+    console.error(e);
+  }
+  hideLoading(btn);
+}
+
+function resetZikr() {
+  currentZikr = null; zikrSession = 0;
+  window.history.replaceState({}, '', window.location.pathname);
+  document.getElementById('zikr-form').style.display = 'block';
+  document.getElementById('zikr-view').style.display = 'none';
+  document.getElementById('zikr-desc').value = '';
+  document.getElementById('zikr-target').value = '';
+  document.getElementById('zikr-session-count').textContent = '0';
+}
+
+function renderZikr(z) {
+  document.getElementById('zikr-view-title').textContent     = z.description;
+  document.getElementById('zikr-total').textContent          = z.total.toLocaleString();
+  document.getElementById('zikr-target-display').textContent = z.target.toLocaleString();
+  var pct = Math.min(100, Math.round((z.total/z.target)*100));
+  document.getElementById('zikr-progress-fill').style.width  = pct + '%';
+  document.getElementById('zikr-pct').textContent            = pct + '%';
+  var el = document.getElementById('zikr-contributions');
+  el.innerHTML = z.contributions.length === 0
+    ? '<div class="empty-state">No contributions yet — be the first!</div>'
+    : z.contributions.map(function(c) {
+        return '<div class="contrib-item"><span class="contrib-name">' + c.name + '</span><span class="contrib-count">' + c.count.toLocaleString() + '</span></div>';
+      }).join('');
+}
+
+function tapZikr() {
+  zikrSession++;
+  var el = document.getElementById('zikr-session-count');
+  el.textContent = zikrSession.toLocaleString();
+  el.classList.add('pop'); setTimeout(function(){ el.classList.remove('pop'); }, 200);
+}
+
+async function saveZikrSession() {
+  if (zikrSession===0) { alert('Tap first!'); return; }
+  if (!currentZikr) return;
+  var name = document.getElementById('zikr-name').value.trim() || 'Anonymous';
+  var btn  = document.querySelector('#zikr-view .btn-teal');
+  showLoading(btn, 'Saving…');
+  currentZikr.total += zikrSession;
+  var ex = currentZikr.contributions.find(function(c){ return c.name===name; });
+  if (ex) ex.count += zikrSession;
+  else currentZikr.contributions.push({ name: name, count: zikrSession });
+  var saved = zikrSession;
+  zikrSession = 0;
+  document.getElementById('zikr-session-count').textContent = '0';
+  renderZikr(currentZikr);
+  try {
+    await sbFetch('zikr_counters?id=eq.' + currentZikr.id, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ total: currentZikr.total, contributions: currentZikr.contributions })
+    });
+  } catch(e) {
+    // rollback
+    currentZikr.total -= saved;
+    if (ex) ex.count -= saved; else currentZikr.contributions.pop();
+    zikrSession = saved;
+    document.getElementById('zikr-session-count').textContent = saved.toLocaleString();
+    renderZikr(currentZikr);
+    alert('Could not save. Please try again.');
+  }
+  hideLoading(btn);
+}
+
+function shareZikrWhatsApp() {
+  if (!currentZikr) return;
+  var link = APP_DOMAIN + '/?z=' + currentZikr.id;
+  whatsappShare('🤲 *' + currentZikr.description + '* — Group Zikr\nTotal: ' + currentZikr.total.toLocaleString() + '/' + currentZikr.target.toLocaleString() + '. Tap to join:', link);
+}
+
+// ════════════════════════════════════════════
+//  YAASEEN (Supabase)
+// ════════════════════════════════════════════
+var yaaseenSession = 0;
+var currentYaaseen = null;
+
+async function createYaaseen() {
+  var desc   = document.getElementById('yaaseen-desc').value.trim();
+  var target = parseInt(document.getElementById('yaaseen-target').value) || 41;
+  if (!desc) { alert('Please enter a description.'); return; }
+  var btn = document.querySelector('#yaaseen-form .btn-teal');
+  showLoading(btn, 'Creating…');
+  var id = generateCode();
+  try {
+    await sbFetch('yaaseen_counters', {
+      method: 'POST', prefer: 'return=minimal',
+      body: JSON.stringify({ id: id, description: desc, target: target, total: 0, contributions: [] })
+    });
+    currentYaaseen = { id: id, description: desc, target: target, total: 0, contributions: [] };
+    window.history.replaceState({}, '', '?y=' + id);
+    document.getElementById('yaaseen-form').style.display = 'none';
+    document.getElementById('yaaseen-view').style.display = 'block';
+    renderYaaseen(currentYaaseen);
+  } catch(e) {
+    alert('Could not create counter. Check your connection.');
+    console.error(e);
+  }
+  hideLoading(btn);
+}
+
+function resetYaaseen() {
+  currentYaaseen = null; yaaseenSession = 0;
+  window.history.replaceState({}, '', window.location.pathname);
+  document.getElementById('yaaseen-form').style.display = 'block';
+  document.getElementById('yaaseen-view').style.display = 'none';
+  document.getElementById('yaaseen-desc').value = '';
+  document.getElementById('yaaseen-target').value = '';
+  document.getElementById('yaaseen-session').textContent = '0';
+}
+
+function renderYaaseen(y) {
+  document.getElementById('yaaseen-view-title').textContent     = y.description;
+  document.getElementById('yaaseen-total').textContent          = y.total;
+  document.getElementById('yaaseen-target-display').textContent = y.target;
+  var pct = Math.min(100, Math.round((y.total/y.target)*100));
+  document.getElementById('yaaseen-progress-fill').style.width  = pct + '%';
+  var el = document.getElementById('yaaseen-contributions');
+  el.innerHTML = y.contributions.length === 0
+    ? '<div class="empty-state">No contributions yet — be the first!</div>'
+    : y.contributions.map(function(c) {
+        return '<div class="contrib-item"><span class="contrib-name">' + c.name + '</span><span class="contrib-count">' + c.count + '</span></div>';
+      }).join('');
+}
+
+function tapYaaseen() {
+  yaaseenSession++;
+  var el = document.getElementById('yaaseen-session');
+  el.textContent = yaaseenSession;
+  el.classList.add('pop'); setTimeout(function(){ el.classList.remove('pop'); }, 200);
+}
+
+async function saveYaaseenSession() {
+  if (yaaseenSession===0) { alert('Tap first!'); return; }
+  if (!currentYaaseen) return;
+  var name = document.getElementById('yaaseen-name').value.trim() || 'Anonymous';
+  var btn  = document.querySelector('#yaaseen-view .btn-teal');
+  showLoading(btn, 'Saving…');
+  currentYaaseen.total += yaaseenSession;
+  var ex = currentYaaseen.contributions.find(function(c){ return c.name===name; });
+  if (ex) ex.count += yaaseenSession;
+  else currentYaaseen.contributions.push({ name: name, count: yaaseenSession });
+  var saved = yaaseenSession;
+  yaaseenSession = 0;
+  document.getElementById('yaaseen-session').textContent = '0';
+  renderYaaseen(currentYaaseen);
+  try {
+    await sbFetch('yaaseen_counters?id=eq.' + currentYaaseen.id, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ total: currentYaaseen.total, contributions: currentYaaseen.contributions })
+    });
+  } catch(e) {
+    currentYaaseen.total -= saved;
+    if (ex) ex.count -= saved; else currentYaaseen.contributions.pop();
+    yaaseenSession = saved;
+    document.getElementById('yaaseen-session').textContent = saved;
+    renderYaaseen(currentYaaseen);
+    alert('Could not save. Please try again.');
+  }
+  hideLoading(btn);
+}
+
+function shareYaaseenWhatsApp() {
+  if (!currentYaaseen) return;
+  var link = APP_DOMAIN + '/?y=' + currentYaaseen.id;
+  whatsappShare('⭐ *' + currentYaaseen.description + '* — Yaaseen Counter\nTotal: ' + currentYaaseen.total + '/' + currentYaaseen.target + '. Tap to join:', link);
+}
+
+// ════════════════════════════════════════════
+//  INIT — runs on page load
+// ════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async function() {
+
+  // Restore standalone tasbeeh total
+  var saved = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
+  document.getElementById('standalone-saved').textContent = saved.toLocaleString();
+
+  // Load previous khatms from localStorage
+  loadMyKhatms();
+
+  var kParam = getParam('k');
+  var zParam = getParam('z');
+  var yParam = getParam('y');
+
+  if (kParam) {
+    // Short ID — fetch from Supabase
+    document.getElementById('tool-khatm').classList.add('open');
+    document.getElementById('khatm-form').style.display = 'none';
+    document.getElementById('khatm-view').style.display = 'block';
+    document.getElementById('khatm-view-title').textContent = 'Loading…';
+    try {
+      var rows = await sbFetch('khatms?id=eq.' + kParam + '&select=*');
+      if (rows && rows.length) {
+        activeKhatm = rows[0];
+        saveKhatmLocal(activeKhatm);
+        renderKhatm(activeKhatm);
+      } else {
+        document.getElementById('khatm-view-title').textContent = 'Khatm not found.';
+      }
+    } catch(e) {
+      document.getElementById('khatm-view-title').textContent = 'Could not load. Check your connection.';
+    }
+
+  } else if (zParam) {
+    document.getElementById('tool-zikr').classList.add('open');
+    document.getElementById('zikr-form').style.display = 'none';
+    document.getElementById('zikr-view').style.display = 'block';
+    document.getElementById('zikr-view-title').textContent = 'Loading…';
+    try {
+      var zRows = await sbFetch('zikr_counters?id=eq.' + zParam + '&select=*');
+      if (zRows && zRows.length) { currentZikr = zRows[0]; renderZikr(currentZikr); }
+      else document.getElementById('zikr-view-title').textContent = 'Counter not found.';
+    } catch(e) {
+      document.getElementById('zikr-view-title').textContent = 'Could not load. Check your connection.';
+    }
+
+  } else if (yParam) {
+    document.getElementById('tool-yaaseen').classList.add('open');
+    document.getElementById('yaaseen-form').style.display = 'none';
+    document.getElementById('yaaseen-view').style.display = 'block';
+    document.getElementById('yaaseen-view-title').textContent = 'Loading…';
+    try {
+      var yRows = await sbFetch('yaaseen_counters?id=eq.' + yParam + '&select=*');
+      if (yRows && yRows.length) { currentYaaseen = yRows[0]; renderYaaseen(currentYaaseen); }
+      else document.getElementById('yaaseen-view-title').textContent = 'Counter not found.';
+    } catch(e) {
+      document.getElementById('yaaseen-view-title').textContent = 'Could not load. Check your connection.';
+    }
+  }
+
+});
+</script>
+
+</body>
+</html>— be the first!</div>
+            </div>
+            <button class="btn btn-ghost" style="width:100%;margin-top:8px;padding:10px;" onclick="resetZikr()">← New Group Counter</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TOOL 3 — YAASEEN ══ -->
+    <div class="tool fade-up" id="tool-yaaseen">
+      <div class="tool-trigger" onclick="toggleTool('yaaseen')">
+        <div class="tool-icon teal">⭐</div>
+        <div class="tool-info">
+          <div class="tool-name">Yaaseen Counter</div>
+          <div class="tool-tagline">Track Surah Yaaseen recitations</div>
+        </div>
+        <div class="tool-chevron">▼</div>
+      </div>
+      <div class="tool-content">
+        <div class="tool-inner">
+          <div class="tool-arabic">يٰسٓ ۚ وَالْقُرْاٰنِ الْحَكِيْمِ</div>
+          <div class="divider"></div>
+
+          <!-- YAASEEN: create form -->
+          <div id="yaaseen-form">
+            <input type="text" class="field" id="yaaseen-desc" placeholder="Intention (e.g. Esale Sawaab)…">
+            <input type="number" class="field" id="yaaseen-target" placeholder="Target (e.g. 41, 100)…">
+            <button class="btn btn-teal" onclick="createYaaseen()">Create Yaaseen Counter</button>
+          </div>
+
+          <!-- YAASEEN: view -->
+          <div id="yaaseen-view" style="display:none">
+            <div style="font-family:'Amiri',serif;font-size:1.1rem;font-weight:700;color:var(--teal);margin-bottom:6px;" id="yaaseen-view-title"></div>
+            <div class="progress-wrap">
+              <div class="progress-fill" id="yaaseen-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-meta">
+              <span>Total: <strong id="yaaseen-total" style="color:var(--teal);">0</strong></span>
+              <span>Target: <strong id="yaaseen-target-display" style="color:var(--gold-dark);">0</strong></span>
+            </div>
+            <p class="note" style="padding-top:4px;">Each tap = one full Surah Yaaseen</p>
+            <div class="tap-zone" style="padding:12px 0 8px;">
+              <div class="big-number" id="yaaseen-session">0</div>
+              <button class="tap-circle" onclick="tapYaaseen()">
+                <span class="tap-circle-icon">⭐</span>
+                TAP
+              </button>
+            </div>
+            <input type="text" class="field" id="yaaseen-name" placeholder="Your name…" style="text-align:center;">
+            <button class="btn btn-teal" onclick="saveYaaseenSession()">Save My Count</button>
+            <button class="btn btn-wa" onclick="shareYaaseenWhatsApp()">Share on WhatsApp</button>
+            <p class="note">Share after saving so your family sees your updated count.</p>
+            <div class="section-label">Contributions</div>
+            <div id="yaaseen-contributions">
+              <div class="empty-state">No contributions yet — be the first!</div>
+            </div>
+            <button class="btn btn-ghost" style="width:100%;margin-top:8px;padding:10px;" onclick="resetYaaseen()">← New Yaaseen Counter</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- MY PREVIOUS KHATMS (home level) — rendered by JS if localStorage has data -->
+    <div id="home-khatms-section" style="display:none;">
+      <div class="section-label" style="padding: 6px 2px 4px;">My Khatms</div>
+      <div class="tool">
+        <div class="tool-inner" style="padding:4px 18px 14px;">
+          <div id="home-khatms-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    For the pleasure of Allah<br>
+    <strong>By Olideen Technologies</strong>
+  </footer>
+
+<!-- Config (credentials) — must load before inline script -->
+<script src="config.js"></script>
+
+<script>
+/* =============================================
+   MY QURAAN TRACKER — single page app
    ============================================= */
 
 var PARA_NAMES = [
