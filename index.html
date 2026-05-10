@@ -10,6 +10,13 @@
   <meta property="og:image" content="https://myquraantracker.netlify.app/MQT_logo.png">
   <meta property="og:url" content="https://myquraantracker.netlify.app">
   <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="My Quraan Tracker">
+  <meta name="twitter:description" content="Organise your group Khatm and Zikr counts in one place.">
+  <meta name="twitter:image" content="https://myquraantracker.netlify.app/MQT_logo.png">
+  <link rel="canonical" href="https://myquraantracker.netlify.app">
+  <link rel="icon" type="image/png" href="MQT_logo.png">
+  <link rel="apple-touch-icon" href="MQT_logo.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +32,7 @@
 
   <div class="hero fade-up">
     <div class="hero-arabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
-    <div class="hero-sub">Track your Khatm, count your Zikr, and worship together — simply.</div>
+    <div class="hero-sub">Track your Khatam, count your Zikr, and make ibaadah together easily.</div>
   </div>
 
   <main class="page-body">
@@ -36,7 +43,7 @@
         <div class="tool-icon teal"><i class="fas fa-book-quran"></i></div>
         <div class="tool-info">
           <div class="tool-name">Quraan Khatm</div>
-          <div class="tool-tagline">Group para tracker — share on WhatsApp</div>
+          <div class="tool-tagline">Group para tracker to save or share on WhatsApp</div>
         </div>
         <div class="tool-chevron"><i class="fas fa-chevron-down"></i></div>
       </div>
@@ -47,9 +54,9 @@
             <div class="tool-arabic">وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</div>
             <div class="divider"></div>
             <input type="text" class="field" id="khatmDesc" placeholder="Name your Khatm (e.g. Esale Sawaab)…">
-            <button class="btn btn-teal" onclick="createKhatm()"><i class="fas fa-plus"></i> Create Khatm</button>
+            <button class="btn btn-teal" onclick="createKhatm()"><i class="fas fa-plus"></i> Create Khatam</button>
             <div id="myKhatmsWrap" class="hidden">
-              <div class="section-label mt-sm">My Previous Khatms</div>
+              <div class="section-label mt-sm">My Previous Khatams</div>
               <div id="myKhatmsList"></div>
             </div>
           </div>
@@ -57,8 +64,8 @@
           <div id="khatm-view" class="hidden">
             <div id="khatm-complete-banner" class="success-banner hidden mt-sm">
               <span class="arabic">اَلْحَمْدُ لِلَّه</span>
-              <h3>Khatm Complete! 🤲</h3>
-              <p>May Allah accept it from everyone. Ameen.</p>
+              <h3>Khatam Complete! 🤲</h3>
+              <p>May Allah accept it from everyone. Aameen.</p>
             </div>
             <div class="khatm-info-title" id="khatm-view-title"></div>
             <div class="progress-wrap">
@@ -153,7 +160,7 @@
             <button class="btn btn-wa" onclick="shareZikrWhatsApp()"><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
             <p class="note">Share after saving so your family sees your updated count.</p>
             <div class="section-label">Contributions</div>
-            <div id="zikr-contributions"><div class="empty-state">No contributions yet — be the first!</div></div>
+            <div id="zikr-contributions"><div class="empty-state">No contributions yet, then be the first!</div></div>
             <button class="btn btn-ghost btn-full" onclick="resetZikr()"><i class="fas fa-arrow-left"></i> New Group Counter</button>
           </div>
 
@@ -204,7 +211,7 @@
             <button class="btn btn-wa" onclick="shareYaaseenWhatsApp()"><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
             <p class="note">Share after saving so your family sees your updated count.</p>
             <div class="section-label">Contributions</div>
-            <div id="yaaseen-contributions"><div class="empty-state">No contributions yet — be the first!</div></div>
+            <div id="yaaseen-contributions"><div class="empty-state">No contributions yet, then be the first!</div></div>
             <button class="btn btn-ghost btn-full" onclick="resetYaaseen()"><i class="fas fa-arrow-left"></i> New Yaaseen Counter</button>
           </div>
 
@@ -216,7 +223,7 @@
 
   <footer>
     For the pleasure of Allah<br>
-    <strong>By Olideen Technologies</strong>
+    By <a href="https://olideen.co.za" target="_blank" rel="noopener" class="footer-link">Olideen Technologies</a>
   </footer>
 
 <script src="config.js"></script>
@@ -289,10 +296,10 @@ function loaded(btn) {
 
 // ── ACCORDION ─────────────────────────────────
 function toggleTool(name) {
-  var el = document.getElementById('tool-' + name);
-  var open = el.classList.contains('open');
-  document.querySelectorAll('.tool').forEach(function(t){ t.classList.remove('open'); });
-  if (!open) el.classList.add('open');
+  var toolEl = document.getElementById('tool-' + name);
+  var open = toolEl.classList.contains('open');
+  document.querySelectorAll(".tool").forEach(function(t){ t.classList.remove('open'); });
+  if (!open) toolEl.classList.add('open');
 }
 
 // ══════════════════════════════════════════════
@@ -313,7 +320,7 @@ async function createKhatm() {
     window.history.replaceState({}, '', '?k='+id);
     showKhatmView(activeKhatm);
     saveKhatmLocal(activeKhatm);
-  } catch(e) { alert('Could not create Khatm. Check your connection.'); console.error(e); }
+  } catch(e) { alert('Could not create Khatm. Check your connection.'); }
   loaded(btn);
 }
 
@@ -433,7 +440,7 @@ function loadMyKhatms() {
       +'<div class="khatm-row-icon"><i class="fas fa-book-quran"></i></div>'
       +'<div style="flex:1"><div class="khatm-row-name">'+k.description+'</div>'
       +'<div class="khatm-row-meta">'+done+'/30 paras done</div>'
-      +'<div class="progress-wrap" style="margin-top:4px;height:5px"><div class="progress-fill" style="width:'+pct+'%"></div></div></div>'
+      +'<div class="progress-wrap"><div class="progress-fill" style="width:'+pct+'%"></div></div></div>'
       +'<div class="khatm-row-pct">'+pct+'%</div></div>';
   }).join('');
 }
@@ -502,7 +509,7 @@ async function createZikr() {
     window.history.replaceState({}, '', '?z='+id);
     hide('zikr-form'); show('zikr-view');
     renderZikr(currentZikr);
-  } catch(e) { alert('Could not create counter. Check your connection.'); console.error(e); }
+  } catch(e) { alert('Could not create counter. Check your connection.'); }
   loaded(btn);
 }
 
@@ -585,7 +592,7 @@ async function createYaaseen() {
     window.history.replaceState({}, '', '?y='+id);
     hide('yaaseen-form'); show('yaaseen-view');
     renderYaaseen(currentYaaseen);
-  } catch(e) { alert('Could not create counter. Check your connection.'); console.error(e); }
+  } catch(e) { alert('Could not create counter. Check your connection.'); }
   loaded(btn);
 }
 

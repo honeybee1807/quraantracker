@@ -452,3 +452,13 @@ footer strong { color: var(--teal); }
 .mt-sm    { margin-top: 8px; }
 .c-teal   { color: var(--teal); }
 .c-gold   { color: var(--gold-dark); }
+
+/* khatm history row progress */
+.khatm-row .progress-wrap { margin-top: 4px; height: 5px; }
+
+.footer-link {
+  color: var(--teal);
+  font-weight: 700;
+  text-decoration: none;
+}
+.footer-link:hover { text-decoration: underline; }
