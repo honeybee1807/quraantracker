@@ -405,7 +405,7 @@ async function saveKhatmToSupabase() {
 function shareKhatmWhatsApp() {
   if (!activeKhatm) return;
   var done = activeKhatm.paras.filter(function(p){ return p.completed; }).length;
-  var msg = '*'+activeKhatm.description+'* — Quraan Khatm\n'
+  var msg = '*'+activeKhatm.description+'* — Quraan Khatam\n'
     + done+' of 30 paras completed as of '+getSATimestamp()+'\n\n'
     + 'Please click the link to claim your para.';
   waShare(msg, APP_DOMAIN+'/?k='+activeKhatm.id);
