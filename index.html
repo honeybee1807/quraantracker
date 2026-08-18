@@ -253,18 +253,11 @@
               <span>Total: <strong id="yaaseen-total" class="c-teal">0</strong></span>
               <span>Target: <strong id="yaaseen-target-display" class="c-gold">0</strong></span>
             </div>
-            <p class="note">Each tap = one full Surah Yaaseen</p>
-            <div class="tap-zone tap-zone-sm">
-              <div class="big-number" id="yaaseen-session">0</div>
-              <button class="tap-circle" onclick="tapYaaseen()">
-                <i class="fas fa-star-and-crescent tap-circle-icon"></i>
-                TAP
-              </button>
-            </div>
             <input type="text" class="field field-center" id="yaaseen-name" placeholder="Your name…">
+            <input type="number" class="field" id="yaaseen-count" placeholder="Number of Yaaseens…">
             <button class="btn btn-teal" onclick="saveYaaseenSession()"><i class="fas fa-floppy-disk"></i> Save My Count</button>
             <button class="btn btn-wa" onclick="shareYaaseenWhatsApp()"><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
-            <p class="note">Share after saving so your family sees your updated count.</p>
+            <p class="note"><strong>Share after saving so your family sees your updated count.</strong></p>
             <div class="section-label">Contributions</div>
             <div id="yaaseen-contributions"><div class="empty-state">No contributions yet, then be the first!</div></div>
             <button class="btn btn-ghost btn-full" onclick="resetYaaseen()"><i class="fas fa-arrow-left"></i> New Yaaseen Counter</button>
@@ -770,7 +763,7 @@ function shareZikrWhatsApp() {
 // ══════════════════════════════════════════════
 //  YAASEEN (Supabase)
 // ══════════════════════════════════════════════
-var yaaseenSession = 0, currentYaaseen = null;
+var currentYaaseen = null;
 
 async function createYaaseen() {
   var desc = el('yaaseen-desc').value.trim();
@@ -790,11 +783,10 @@ async function createYaaseen() {
 }
 
 function resetYaaseen() {
-  currentYaaseen = null; yaaseenSession = 0;
+  currentYaaseen = null;
   window.history.replaceState({}, '', window.location.pathname);
   show('yaaseen-form'); hide('yaaseen-view');
   el('yaaseen-desc').value = el('yaaseen-target').value = '';
-  el('yaaseen-session').textContent = '0';
 }
 
 function renderYaaseen(y) {
@@ -809,32 +801,25 @@ function renderYaaseen(y) {
       }).join('');
 }
 
-function tapYaaseen() {
-  yaaseenSession++;
-  var e = el('yaaseen-session');
-  e.textContent = yaaseenSession;
-  e.classList.add('pop'); setTimeout(function(){ e.classList.remove('pop'); }, 200);
-}
-
 async function saveYaaseenSession() {
-  if (yaaseenSession===0) { alert('Tap first!'); return; }
   if (!currentYaaseen) return;
-  var name = el('yaaseen-name').value.trim() || 'Anonymous';
+  var name = el('yaaseen-name').value.trim();
+  var count = parseInt(el('yaaseen-count').value);
+  if (!name || !count || count <= 0) { alert('Please enter your name and a number greater than zero.'); return; }
   var btn = document.querySelector('#yaaseen-view .btn-teal');
   loading(btn, 'Saving…');
-  currentYaaseen.total += yaaseenSession;
+  currentYaaseen.total += count;
   var ex = currentYaaseen.contributions.find(function(c){ return c.name===name; });
-  if (ex) ex.count += yaaseenSession;
-  else currentYaaseen.contributions.push({name, count:yaaseenSession});
-  var saved = yaaseenSession; yaaseenSession = 0;
-  el('yaaseen-session').textContent = '0';
+  if (ex) ex.count += count;
+  else currentYaaseen.contributions.push({name, count:count});
+  el('yaaseen-name').value = ''; el('yaaseen-count').value = '';
   renderYaaseen(currentYaaseen);
   try {
     await sbRpc('update_yaaseen_counter', {p_id:currentYaaseen.id, p_total:currentYaaseen.total, p_contributions:currentYaaseen.contributions});
   } catch(e) {
-    currentYaaseen.total -= saved;
-    if (ex) ex.count -= saved; else currentYaaseen.contributions.pop();
-    yaaseenSession = saved; el('yaaseen-session').textContent = saved;
+    currentYaaseen.total -= count;
+    if (ex) ex.count -= count; else currentYaaseen.contributions.pop();
+    el('yaaseen-name').value = name; el('yaaseen-count').value = count;
     renderYaaseen(currentYaaseen); alert('Could not save. Please try again.');
   }
   loaded(btn);
