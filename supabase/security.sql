@@ -308,3 +308,22 @@ grant execute on function public.update_personal_zikr(text, bigint) to anon;
 -- Direct SELECT/PATCH/DELETE on personal_zikr will return
 -- permission denied. INSERT stays open for the "Start Zikr" flow.
 -- =============================================================
+
+
+-- =============================================================
+-- Round 3b — add a target to personal_zikr
+--
+-- The Personal Zikr create form now asks for a target (mirrors
+-- Group Zikr / Yaaseen), so the table needs a column for it. Using
+-- ALTER TABLE (not a drop/recreate) so any Zikr already created —
+-- e.g. the "DevTest1" test row — keeps its data; existing rows get
+-- backfilled with the default below.
+--
+-- No RPC changes needed: get_personal_zikr does `select *`, so it
+-- picks up the new column automatically, and target is only ever
+-- set at creation (same as Group Zikr / Yaaseen) so
+-- update_personal_zikr intentionally still only takes p_total.
+-- =============================================================
+
+alter table public.personal_zikr
+  add column if not exists target bigint not null default 100;

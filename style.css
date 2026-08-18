@@ -8,6 +8,8 @@
   --gold:       #C9A84C;
   --gold-dark:  #a07a28;
   --gold-soft:  #fdf6e3;
+  --purple:     #6B3FA0;
+  --purple-soft: #F0EAF8;
   --cream:      #FAF7F2;
   --cream-dark: #f0ebe0;
   --border:     #e4ddd0;
@@ -475,3 +477,17 @@ footer strong { color: var(--teal); }
   text-decoration: none;
 }
 .footer-link:hover { text-decoration: underline; }
+
+/* ── PERSONAL KHATAM — purple accent (scoped override, teal stays everywhere else) ── */
+#tool-personal-khatm .tool-icon.teal        { background: var(--purple-soft); color: var(--purple); }
+#tool-personal-khatm .tool-name             { color: var(--purple); }
+#tool-personal-khatm .tool-arabic           { color: var(--purple); }
+#tool-personal-khatm .btn-teal              { background: var(--purple); }
+#tool-personal-khatm .btn-ghost             { color: var(--purple); }
+#tool-personal-khatm .success-banner        { background: var(--purple); }
+#tool-personal-khatm .khatm-info-title      { color: var(--purple); }
+#tool-personal-khatm .progress-fill         { background: var(--purple); }
+#tool-personal-khatm .para-tile.available   { background: var(--purple-soft); border-color: rgba(107,63,160,0.12); }
+#tool-personal-khatm .para-tile.available .para-num  { color: var(--purple); }
+#tool-personal-khatm .para-tile.available .para-name { color: var(--purple); }
+#tool-personal-khatm .para-tile.completed   { background: var(--purple); }

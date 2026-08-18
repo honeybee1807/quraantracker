@@ -165,12 +165,22 @@
 
           <div id="personal-zikr-form">
             <input type="text" class="field" id="personalZikrDesc" placeholder="Name this Zikr… (e.g. Durood Ibrahim)">
+            <input type="number" class="field" id="personalZikrTarget" placeholder="Target (e.g. 100, 1000)…">
             <button class="btn btn-teal" onclick="createPersonalZikr()"><i class="fas fa-plus"></i> Start Zikr</button>
           </div>
 
           <div id="personal-zikr-view" class="hidden">
-            <div class="zikr-title" id="personal-zikr-view-title"></div>
-            <div class="big-number" id="personal-zikr-total">0</div>
+            <div class="tap-zone tap-zone-sm">
+              <div class="zikr-title" id="personal-zikr-view-title"></div>
+              <div class="big-number" id="personal-zikr-total">0</div>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-fill" id="personal-zikr-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-meta">
+              <span>Target: <strong id="personal-zikr-target-display" class="c-gold">0</strong></span>
+              <span id="personal-zikr-pct">0%</span>
+            </div>
             <input type="text" class="field field-center" id="personalZikrName" placeholder="Your name…">
             <input type="number" class="field" id="personalZikrCount" placeholder="How many did you read?">
             <div class="btn-row">
@@ -425,7 +435,7 @@ function renderPersonalKhatm(khatm) {
     return '<div class="para-tile available" onclick="togglePersonalPara('+p.number+')">'
       +'<span class="para-num">'+p.number+'</span>'
       +'<span class="para-name">'+PARA_NAMES[p.number-1]+'</span>'
-      +'<span class="para-hint" style="color:var(--teal-mid)">Tap to mark done</span></div>';
+      +'<span class="para-hint" style="color:var(--purple)">Tap to mark done</span></div>';
   }).join('');
 }
 
@@ -657,13 +667,14 @@ async function initPersonalZikrPage() {
 
 async function createPersonalZikr() {
   var desc = el('personalZikrDesc').value.trim();
+  var target = parseInt(el('personalZikrTarget').value) || 100;
   if (!desc) { alert('Please enter a name for your Zikr.'); return; }
   var btn = document.querySelector('#personal-zikr-form .btn-teal');
   loading(btn, 'Creating…');
   var id = generatePersonalZikrId();
   try {
-    await sbFetch('personal_zikr', { method:'POST', prefer:'return=minimal', body: JSON.stringify({id, description:desc, total:0}) });
-    activePersonalZikr = {id, description:desc, total:0};
+    await sbFetch('personal_zikr', { method:'POST', prefer:'return=minimal', body: JSON.stringify({id, description:desc, target, total:0}) });
+    activePersonalZikr = {id, description:desc, target, total:0};
     window.history.replaceState({}, '', '?pz='+id);
     showPersonalZikrView(activePersonalZikr);
   } catch(e) { alert('Could not create Zikr. Check your connection.'); }
@@ -686,6 +697,10 @@ function showPersonalZikrView(z) {
 function renderPersonalZikr(z) {
   el('personal-zikr-view-title').textContent = z.description;
   el('personal-zikr-total').textContent = z.total.toLocaleString();
+  el('personal-zikr-target-display').textContent = z.target.toLocaleString();
+  var pct = Math.min(100, Math.round((z.total/z.target)*100));
+  el('personal-zikr-progress-fill').style.width = pct+'%';
+  el('personal-zikr-pct').textContent = pct+'%';
 }
 
 async function savePersonalZikrSession() {
