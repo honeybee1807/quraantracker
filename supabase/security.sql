@@ -174,7 +174,7 @@ security definer
 set search_path = public
 as $$
   update public.khatms
-  set paras = p_paras, updated_at = now()
+  set paras = p_paras
   where id = p_id;
 $$;
 
@@ -192,7 +192,7 @@ security definer
 set search_path = public
 as $$
   update public.zikr_counters
-  set total = p_total, contributions = p_contributions, updated_at = now()
+  set total = p_total, contributions = p_contributions
   where id = p_id;
 $$;
 
@@ -210,7 +210,7 @@ security definer
 set search_path = public
 as $$
   update public.yaaseen_counters
-  set total = p_total, contributions = p_contributions, updated_at = now()
+  set total = p_total, contributions = p_contributions
   where id = p_id;
 $$;
 
