@@ -246,3 +246,65 @@ grant execute on function public.update_personal_khatm(text, jsonb) to anon;
 -- INSERT was intentionally left untouched — creating a new
 -- Khatam/counter still goes direct to the table, as before.
 -- =============================================================
+
+
+-- =============================================================
+-- Round 3 — personal_zikr (new Personal Zikr feature)
+--
+-- Table created separately (without RLS) via:
+--   create table personal_zikr (
+--     id          text primary key,
+--     description text not null,
+--     total       bigint not null default 0,
+--     created_at  timestamptz default now(),
+--     updated_at  timestamptz default now()
+--   );
+--
+-- This applies the exact same pattern already used for the other
+-- four tables: RLS on, INSERT stays open, SELECT/UPDATE/DELETE are
+-- blocked for anon and replaced with id-scoped SECURITY DEFINER
+-- RPCs so neither bulk reads nor filterless mass-writes are
+-- possible.
+-- =============================================================
+
+alter table public.personal_zikr enable row level security;
+
+drop policy if exists "personal_zikr anon insert" on public.personal_zikr;
+create policy "personal_zikr anon insert" on public.personal_zikr
+  for insert to anon
+  with check (true);
+
+revoke select, update, delete on public.personal_zikr from anon;
+
+create or replace function public.get_personal_zikr(p_id text)
+returns setof public.personal_zikr
+language sql
+security definer
+set search_path = public
+as $$
+  select * from public.personal_zikr where id = p_id;
+$$;
+
+grant execute on function public.get_personal_zikr(text) to anon;
+
+create or replace function public.update_personal_zikr(p_id text, p_total bigint)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.personal_zikr
+  set total = p_total, updated_at = now()
+  where id = p_id;
+$$;
+
+grant execute on function public.update_personal_zikr(text, bigint) to anon;
+
+
+-- =============================================================
+-- After running this:
+--   POST /rest/v1/rpc/get_personal_zikr     body: {"p_id": "pz_xxxxxx"}
+--   POST /rest/v1/rpc/update_personal_zikr  body: {"p_id": "pz_xxxxxx", "p_total": 41}
+-- Direct SELECT/PATCH/DELETE on personal_zikr will return
+-- permission denied. INSERT stays open for the "Start Zikr" flow.
+-- =============================================================

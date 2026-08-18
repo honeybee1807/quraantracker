@@ -152,7 +152,7 @@
         <div class="tool-icon gold"><i class="fas fa-infinity"></i></div>
         <div class="tool-info">
           <div class="tool-name gold-name">Zikr & Durood</div>
-          <div class="tool-tagline">Quick tasbeeh or group counter</div>
+          <div class="tool-tagline">Personal or group Zikr counter</div>
         </div>
         <div class="tool-chevron"><i class="fas fa-chevron-down"></i></div>
       </div>
@@ -161,31 +161,32 @@
           <div class="tool-arabic">اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا</div>
           <div class="divider"></div>
 
-          <div class="section-label">Quick Tasbeeh</div>
-          <div class="tap-zone tap-zone-sm">
-            <div class="big-number gold-num" id="standalone-count">0</div>
-            <button class="tap-circle gold-tap" onclick="tapStandalone()">
-              <i class="fas fa-hand-point-up tap-circle-icon"></i>
-              TAP
-            </button>
+          <div class="section-label c-teal">Personal Zikr</div>
+
+          <div id="personal-zikr-form">
+            <input type="text" class="field" id="personalZikrDesc" placeholder="Name this Zikr… (e.g. Durood Ibrahim)">
+            <button class="btn btn-teal" onclick="createPersonalZikr()"><i class="fas fa-plus"></i> Start Zikr</button>
           </div>
-          <div class="stat-row">
-            <div class="stat-pill gold-pill">
-              <span class="stat-val gold-val" id="standalone-session">0</span>
-              <span class="stat-lbl">This Session</span>
+
+          <div id="personal-zikr-view" class="hidden">
+            <div class="zikr-title" id="personal-zikr-view-title"></div>
+            <div class="big-number" id="personal-zikr-total">0</div>
+            <input type="text" class="field field-center" id="personalZikrName" placeholder="Your name…">
+            <input type="number" class="field" id="personalZikrCount" placeholder="How many did you read?">
+            <div class="btn-row">
+              <button class="btn btn-teal btn-flex" onclick="savePersonalZikrSession()"><i class="fas fa-floppy-disk"></i> Save My Count</button>
+              <button class="btn btn-ghost btn-flex" onclick="togglePersonalZikrLink()"><i class="fas fa-link"></i> My Link</button>
             </div>
-            <div class="stat-pill teal-pill">
-              <span class="stat-val" id="standalone-saved">0</span>
-              <span class="stat-lbl">Total Saved</span>
+            <div id="personal-zikr-link-section" class="hidden">
+              <input type="text" class="field" id="personalZikrLink" readonly>
+              <button class="btn btn-ghost btn-full" id="personalZikrLinkCopyBtn" onclick="copyPersonalZikrLink()"><i class="fas fa-copy"></i> Copy Link</button>
+              <div class="info-box">💡 <strong>Tip:</strong> Save this link in your phone notes. Open it anytime to continue tracking this Zikr.</div>
             </div>
-          </div>
-          <div class="btn-row">
-            <button class="btn btn-gold btn-flex" onclick="saveStandalone()"><i class="fas fa-floppy-disk"></i> Save</button>
-            <button class="btn btn-ghost" onclick="resetStandalone()"><i class="fas fa-rotate-left"></i> Reset</button>
+            <button class="btn btn-ghost btn-full" onclick="resetPersonalZikr()"><i class="fas fa-arrow-left"></i> New Zikr</button>
           </div>
 
           <div class="divider divider-lg"></div>
-          <div class="section-label">Group Counter</div>
+          <div class="section-label c-gold">Group Zikr</div>
 
           <div id="zikr-form">
             <input type="text" class="field" id="zikr-desc" placeholder="What are you counting? (e.g. Durood Ibrahim)…">
@@ -203,14 +204,8 @@
               <span id="zikr-pct">0%</span>
               <span>Target: <strong id="zikr-target-display" class="c-gold">0</strong></span>
             </div>
-            <div class="tap-zone tap-zone-sm">
-              <div class="big-number" id="zikr-session-count">0</div>
-              <button class="tap-circle" onclick="tapZikr()">
-                <i class="fas fa-hand-point-up tap-circle-icon"></i>
-                TAP
-              </button>
-            </div>
             <input type="text" class="field field-center" id="zikr-name" placeholder="Your name…">
+            <input type="number" class="field" id="zikr-count" placeholder="How many did you read?">
             <button class="btn btn-teal" onclick="saveZikrSession()"><i class="fas fa-floppy-disk"></i> Save My Count</button>
             <button class="btn btn-wa" onclick="shareZikrWhatsApp()"><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
             <p class="note">Share after saving so your family sees your updated count.</p>
@@ -647,40 +642,98 @@ async function loadKhatmById(id) {
 }
 
 // ══════════════════════════════════════════════
-//  ZIKR — standalone (localStorage)
+//  PERSONAL ZIKR
 // ══════════════════════════════════════════════
-var standaloneSession = 0;
+var activePersonalZikr = null;
 
-function tapStandalone() {
-  standaloneSession++;
-  var e = el('standalone-count');
-  e.textContent = standaloneSession.toLocaleString();
-  e.classList.add('pop'); setTimeout(function(){ e.classList.remove('pop'); }, 200);
-  el('standalone-session').textContent = standaloneSession.toLocaleString();
+function generatePersonalZikrId() {
+  return 'pz_' + Math.random().toString(36).substring(2, 8);
 }
 
-function saveStandalone() {
-  var prev = parseInt(localStorage.getItem('mqt_standalone_total') || '0');
-  var total = prev + standaloneSession;
-  localStorage.setItem('mqt_standalone_total', total);
-  standaloneSession = 0;
-  el('standalone-count').textContent = el('standalone-session').textContent = '0';
-  el('standalone-saved').textContent = total.toLocaleString();
+async function initPersonalZikrPage() {
+  var pzParam = getParam('pz');
+  if (pzParam) { await loadPersonalZikr(pzParam); }
 }
 
-function resetStandalone() {
-  if (!confirm('Reset all counts?')) return;
-  standaloneSession = 0;
-  localStorage.removeItem('mqt_standalone_total');
-  ['standalone-count','standalone-session','standalone-saved'].forEach(function(id){
-    el(id).textContent = '0';
+async function createPersonalZikr() {
+  var desc = el('personalZikrDesc').value.trim();
+  if (!desc) { alert('Please enter a name for your Zikr.'); return; }
+  var btn = document.querySelector('#personal-zikr-form .btn-teal');
+  loading(btn, 'Creating…');
+  var id = generatePersonalZikrId();
+  try {
+    await sbFetch('personal_zikr', { method:'POST', prefer:'return=minimal', body: JSON.stringify({id, description:desc, total:0}) });
+    activePersonalZikr = {id, description:desc, total:0};
+    window.history.replaceState({}, '', '?pz='+id);
+    showPersonalZikrView(activePersonalZikr);
+  } catch(e) { alert('Could not create Zikr. Check your connection.'); }
+  loaded(btn);
+}
+
+async function loadPersonalZikr(id) {
+  try {
+    var rows = await sbRpc('get_personal_zikr', {p_id:id});
+    if (!rows || !rows.length) { alert('Zikr not found.'); return; }
+    activePersonalZikr = rows[0];
+    showPersonalZikrView(activePersonalZikr);
+  } catch(e) { alert('Could not load Zikr. Check your connection.'); }
+}
+
+function showPersonalZikrView(z) {
+  hide('personal-zikr-form'); show('personal-zikr-view'); renderPersonalZikr(z);
+}
+
+function renderPersonalZikr(z) {
+  el('personal-zikr-view-title').textContent = z.description;
+  el('personal-zikr-total').textContent = z.total.toLocaleString();
+}
+
+async function savePersonalZikrSession() {
+  if (!activePersonalZikr) return;
+  var name = el('personalZikrName').value.trim();
+  var count = parseInt(el('personalZikrCount').value);
+  if (!name || !count || count <= 0) { alert('Please enter your name and a number greater than zero.'); return; }
+  var btn = document.querySelector('#personal-zikr-view .btn-teal');
+  loading(btn, 'Saving…');
+  activePersonalZikr.total += count;
+  el('personalZikrName').value = ''; el('personalZikrCount').value = '';
+  renderPersonalZikr(activePersonalZikr);
+  try {
+    await sbRpc('update_personal_zikr', {p_id:activePersonalZikr.id, p_total:activePersonalZikr.total});
+  } catch(e) {
+    activePersonalZikr.total -= count;
+    el('personalZikrName').value = name; el('personalZikrCount').value = count;
+    renderPersonalZikr(activePersonalZikr); alert('Could not save. Please try again.');
+  }
+  loaded(btn);
+}
+
+function togglePersonalZikrLink() {
+  if (!activePersonalZikr) return;
+  el('personalZikrLink').value = APP_DOMAIN + '/?pz=' + activePersonalZikr.id;
+  el('personal-zikr-link-section').classList.toggle('hidden');
+}
+
+function copyPersonalZikrLink() {
+  var link = el('personalZikrLink').value;
+  navigator.clipboard.writeText(link).then(function(){
+    var btn = el('personalZikrLinkCopyBtn');
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(function(){ btn.innerHTML = '<i class="fas fa-copy"></i> Copy Link'; }, 1800);
   });
+}
+
+function resetPersonalZikr() {
+  activePersonalZikr = null;
+  window.history.replaceState({}, '', window.location.pathname);
+  show('personal-zikr-form'); hide('personal-zikr-view');
+  el('personalZikrDesc').value = '';
 }
 
 // ══════════════════════════════════════════════
 //  ZIKR — group (Supabase)
 // ══════════════════════════════════════════════
-var zikrSession = 0, currentZikr = null;
+var currentZikr = null;
 
 async function createZikr() {
   var desc = el('zikr-desc').value.trim();
@@ -700,11 +753,10 @@ async function createZikr() {
 }
 
 function resetZikr() {
-  currentZikr = null; zikrSession = 0;
+  currentZikr = null;
   window.history.replaceState({}, '', window.location.pathname);
   show('zikr-form'); hide('zikr-view');
   el('zikr-desc').value = el('zikr-target').value = '';
-  el('zikr-session-count').textContent = '0';
 }
 
 function renderZikr(z) {
@@ -721,32 +773,25 @@ function renderZikr(z) {
       }).join('');
 }
 
-function tapZikr() {
-  zikrSession++;
-  var e = el('zikr-session-count');
-  e.textContent = zikrSession.toLocaleString();
-  e.classList.add('pop'); setTimeout(function(){ e.classList.remove('pop'); }, 200);
-}
-
 async function saveZikrSession() {
-  if (zikrSession===0) { alert('Tap first!'); return; }
   if (!currentZikr) return;
-  var name = el('zikr-name').value.trim() || 'Anonymous';
+  var name = el('zikr-name').value.trim();
+  var count = parseInt(el('zikr-count').value);
+  if (!name || !count || count <= 0) { alert('Please enter your name and a number greater than zero.'); return; }
   var btn = document.querySelector('#zikr-view .btn-teal');
   loading(btn, 'Saving…');
-  currentZikr.total += zikrSession;
+  currentZikr.total += count;
   var ex = currentZikr.contributions.find(function(c){ return c.name===name; });
-  if (ex) ex.count += zikrSession;
-  else currentZikr.contributions.push({name, count:zikrSession});
-  var saved = zikrSession; zikrSession = 0;
-  el('zikr-session-count').textContent = '0';
+  if (ex) ex.count += count;
+  else currentZikr.contributions.push({name, count:count});
+  el('zikr-name').value = ''; el('zikr-count').value = '';
   renderZikr(currentZikr);
   try {
     await sbRpc('update_zikr_counter', {p_id:currentZikr.id, p_total:currentZikr.total, p_contributions:currentZikr.contributions});
   } catch(e) {
-    currentZikr.total -= saved;
-    if (ex) ex.count -= saved; else currentZikr.contributions.pop();
-    zikrSession = saved; el('zikr-session-count').textContent = saved.toLocaleString();
+    currentZikr.total -= count;
+    if (ex) ex.count -= count; else currentZikr.contributions.pop();
+    el('zikr-name').value = name; el('zikr-count').value = count;
     renderZikr(currentZikr); alert('Could not save. Please try again.');
   }
   loaded(btn);
@@ -838,12 +883,15 @@ function shareYaaseenWhatsApp() {
 // ══════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', async function() {
 
-  el('standalone-saved').textContent = (parseInt(localStorage.getItem('mqt_standalone_total') || '0')).toLocaleString();
   loadMyKhatms();
 
   var pkParam = getParam('pk');
   if (pkParam) { el('tool-personal-khatm').classList.add('open'); }
   await initPersonalKhatmPage();
+
+  var pzParam = getParam('pz');
+  if (pzParam) { el('tool-zikr').classList.add('open'); }
+  await initPersonalZikrPage();
 
   var kParam = getParam('k'), zParam = getParam('z'), yParam = getParam('y');
 
