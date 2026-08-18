@@ -96,13 +96,13 @@ async function initKhatmPage() {
     try {
       const rows = await sbFetch(`khatms?id=eq.${code}&select=*`);
       if (!rows || rows.length === 0) {
-        showKhatmError('Khatm not found. The code may be incorrect.');
+        showKhatmError('Khatam not found. The code may be incorrect.');
         return;
       }
       activeKhatm = rows[0];
       showKhatmView(activeKhatm);
     } catch (e) {
-      showKhatmError('Could not load Khatm. Please check your connection.');
+      showKhatmError('Could not load Khatam. Please check your connection.');
     }
     return;
   }
@@ -119,7 +119,7 @@ function showKhatmLoading() {
     loader.className = 'page-body';
     loader.innerHTML = `<div class="card fade-up"><div class="card-body" style="text-align:center;padding:2rem;">
       <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--teal);"></i>
-      <p style="margin-top:1rem;color:var(--text-soft);">Loading Khatm…</p>
+      <p style="margin-top:1rem;color:var(--text-soft);">Loading Khatam…</p>
     </div></div>`;
     document.querySelector('.page-hero').after(loader);
   }
@@ -139,7 +139,7 @@ function showKhatmError(msg) {
       <div class="card-body" style="text-align:center;padding:2rem 1rem;">
         <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
         <div style="font-family:Georgia,serif;font-weight:700;color:var(--teal);font-size:1.1rem;margin-bottom:0.5rem;">${msg}</div>
-        <a href="quraan.html" class="btn btn-primary" style="margin-top:1rem;">Start a New Khatm</a>
+        <a href="quraan.html" class="btn btn-primary" style="margin-top:1rem;">Start a New Khatam</a>
       </div>
     </div>`;
 }
@@ -159,7 +159,7 @@ function showKhatmView(khatm) {
 
 async function createKhatmFromPage() {
   const desc = document.getElementById('khatmDescPage').value.trim();
-  if (!desc) { alert('Please enter a name for your Khatm first.'); return; }
+  if (!desc) { alert('Please enter a name for your Khatam first.'); return; }
 
   const btn = document.querySelector('#khatmFormSection .btn-primary');
   btn.disabled = true;
@@ -180,7 +180,7 @@ async function createKhatmFromPage() {
     window.history.replaceState({}, '', `quraan.html?k=${code}`);
     showKhatmView(activeKhatm);
   } catch (e) {
-    showError('Could not create Khatm. Please try again.');
+    showError('Could not create Khatam. Please try again.');
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-plus"></i> Create & Share';
   }
@@ -202,7 +202,7 @@ function renderKhatm(khatm) {
 
   // Single WhatsApp share link
   const shareUrl = `${APP_DOMAIN}/quraan.html?k=${khatm.id}`;
-  const msg = `📖 *${khatm.description}* — Quraan Khatm\n${done}/30 paras done. Tap to join and claim yours:`;
+  const msg = `📖 *${khatm.description}* — Quraan Khatam\n${done}/30 paras done. Tap to join and claim yours:`;
   setWaLink('khatmWaBtn', buildWaHref(msg, shareUrl));
 
   // Paras grid

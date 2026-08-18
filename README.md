@@ -6,7 +6,7 @@
 
 # My Quraan Tracker
 
-**Organise group Quraan Khatms · Count Zikr & Durood · Track Yaaseen recitations**
+**Organise group Quraan Khatams · Count Zikr & Durood · Track Yaaseen recitations**
 
 *For the pleasure of Allah — By Olideen Technologies*
 
@@ -41,7 +41,7 @@
 
 | Feature | Description |
 |---|---|
-| 📖 **Group Quraan Khatm** | Create a Khatm, allocate all 30 paras, and track who's completed what — live across all devices |
+| 📖 **Group Quraan Khatam** | Create a Khatam, allocate all 30 paras, and track who's completed what — live across all devices |
 | 🤲 **Zikr & Durood Counter** | Quick personal tasbeeh counter, or set a group target and track everyone's contributions |
 | ⭐ **Surah Yaaseen Counter** | Count and track Yaaseen recitations individually or as a group |
 | 📲 **WhatsApp Sharing** | Share a clean short link — no base64, no codes, no ugly long URLs |
@@ -70,12 +70,12 @@
 ## 🚀 How It Works
 
 ```
-1️⃣  Someone creates a Khatm, Zikr, or Yaaseen counter
+1️⃣  Someone creates a Khatam, Zikr, or Yaaseen counter
         ↓
 2️⃣  Data is saved to Supabase — a short ID is generated (e.g. XK3TQ)
         ↓
 3️⃣  WhatsApp message is sent with a clean link:
-     *Esale Sawaab* — Quraan Khatm
+     *Esale Sawaab* — Quraan Khatam
      12 of 30 paras completed as of 11 May 26 @ 14:32 (South Africa Standard Time)
 
      Please click the link to claim your para.
@@ -113,7 +113,7 @@
 | 🎨 Styling | CSS3 — custom properties, mobile-first, all in `style.css` |
 | ⚙️ Logic | Vanilla JavaScript — no frameworks, no npm |
 | ☁️ Database | Supabase (PostgreSQL) — REST API via raw `fetch` |
-| 💾 Local Cache | `localStorage` — previous Khatms list, standalone tasbeeh |
+| 💾 Local Cache | `localStorage` — previous Khatams list, standalone tasbeeh |
 | 🚀 Hosting | Netlify — free tier, auto-deploy from GitHub |
 | 📦 Version Control | GitHub |
 | 🔍 SEO | Sitemap · robots.txt · Open Graph · Twitter Card · Google Search Console |
@@ -125,7 +125,7 @@
 ## 🗄️ Database Schema
 
 ```sql
--- Khatm tracking
+-- Khatam tracking
 khatms (
   id          text PRIMARY KEY,   -- short random code e.g. "XK3TQ"
   description text,               -- e.g. "Esale Sawaab for Dadi"
@@ -199,10 +199,10 @@ git push
 
 This app was built **for the pleasure of Allah** to make it easier for Muslim families to:
 
-- Complete group Quraan Khatms for loved ones (Esale Sawaab)
-- Organise Khatms during Ramadan, weddings, and special occasions
+- Complete group Quraan Khatams for loved ones (Esale Sawaab)
+- Organise Khatams during Ramadan, weddings, and special occasions
 - Count collective Durood, Tasbeeh, and Zikr as a community
-- Remove the admin burden from whoever organises the Khatm
+- Remove the admin burden from whoever organises the Khatam
 
 > *"Whoever facilitates ease for another, Allah will facilitate ease for them in this world and the Hereafter."* — Sahih Muslim
 

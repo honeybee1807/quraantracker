@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <title>My Quraan Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="description" content="Track your Quraan Khatm and Zikr with family — simple, free, no app needed.">
+  <meta name="description" content="Track your Quraan Khatam and Zikr with family — simple, free, no app needed.">
   <meta property="og:title" content="My Quraan Tracker">
-  <meta property="og:description" content="Organise your group Khatm and Zikr counts in one place.">
+  <meta property="og:description" content="Organise your group Khatam and Zikr counts in one place.">
   <meta property="og:image" content="https://myquraantracker.netlify.app/MQT_logo.png">
   <meta property="og:url" content="https://myquraantracker.netlify.app">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="My Quraan Tracker">
-  <meta name="twitter:description" content="Organise your group Khatm and Zikr counts in one place.">
+  <meta name="twitter:description" content="Organise your group Khatam and Zikr counts in one place.">
   <meta name="twitter:image" content="https://myquraantracker.netlify.app/MQT_logo.png">
   <link rel="canonical" href="https://myquraantracker.netlify.app">
   <link rel="icon" type="image/png" href="MQT_logo.png">
@@ -37,12 +37,64 @@
 
   <main class="page-body">
 
+    <!-- ══ PERSONAL KHATM ══ -->
+    <div class="tool fade-up" id="tool-personal-khatm">
+      <div class="tool-trigger" onclick="toggleTool('personal-khatm')">
+        <div class="tool-icon teal"><i class="fas fa-user"></i></div>
+        <div class="tool-info">
+          <div class="tool-name">Personal Khatam</div>
+          <div class="tool-tagline">Track your own Quraan reading at your own pace</div>
+        </div>
+        <div class="tool-chevron"><i class="fas fa-chevron-down"></i></div>
+      </div>
+      <div class="tool-content">
+        <div class="tool-inner">
+
+          <div id="personal-khatm-form">
+            <div class="tool-arabic">وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</div>
+            <div class="divider"></div>
+            <input type="text" class="field" id="personalKhatmDesc" placeholder="Name your Khatam… (e.g. My Ramadaan Khatam)">
+            <button class="btn btn-teal" onclick="createPersonalKhatm()"><i class="fas fa-plus"></i> Create Khatam</button>
+          </div>
+
+          <div id="personal-khatm-view" class="hidden">
+            <div id="personal-khatm-complete-banner" class="success-banner hidden mt-sm">
+              <span class="arabic">اَلْحَمْدُ لِلَّه</span>
+              <h3>Khatam Complete! 🤲</h3>
+              <p>May Allah accept it. Ameen.</p>
+            </div>
+            <button class="btn btn-ghost btn-full" onclick="resetPersonalKhatm()"><i class="fas fa-arrow-left"></i> Start New Khatam</button>
+            <div class="khatm-info-title" id="personal-khatm-view-title"></div>
+            <div class="progress-wrap">
+              <div class="progress-fill" id="personal-khatm-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-meta">
+              <span id="personal-khatm-progress-text">0 of 30 paras done</span>
+              <span id="personal-khatm-progress-pct">0%</span>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-teal btn-flex" onclick="savePersonalKhatm()"><i class="fas fa-floppy-disk"></i> Save</button>
+              <button class="btn btn-ghost btn-flex" onclick="togglePersonalLink()"><i class="fas fa-link"></i> My Link</button>
+            </div>
+            <div id="personal-link-section" class="hidden">
+              <input type="text" class="field" id="personalKhatmLink" readonly>
+              <button class="btn btn-ghost btn-full" id="personalLinkCopyBtn" onclick="copyPersonalLink()"><i class="fas fa-copy"></i> Copy Link</button>
+              <div class="info-box">💡 <strong>Tip:</strong> Save this link in your phone notes. Open it anytime, on any device, to return to this Khatam.</div>
+            </div>
+            <div class="section-label">30 Paras — tap to mark done</div>
+            <div class="paras-grid" id="personal-paras-grid"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- ══ KHATM ══ -->
     <div class="tool fade-up" id="tool-khatm">
       <div class="tool-trigger" onclick="toggleTool('khatm')">
         <div class="tool-icon teal"><i class="fas fa-book-quran"></i></div>
         <div class="tool-info">
-          <div class="tool-name">Quraan Khatm</div>
+          <div class="tool-name">Quraan Khatam</div>
           <div class="tool-tagline">Group para tracker to save or share on WhatsApp</div>
         </div>
         <div class="tool-chevron"><i class="fas fa-chevron-down"></i></div>
@@ -53,7 +105,7 @@
           <div id="khatm-form">
             <div class="tool-arabic">وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</div>
             <div class="divider"></div>
-            <input type="text" class="field" id="khatmDesc" placeholder="Name your Khatm (e.g. Esale Sawaab)…">
+            <input type="text" class="field" id="khatmDesc" placeholder="Name your Khatam (e.g. Esale Sawaab)…">
             <button class="btn btn-teal" onclick="createKhatm()"><i class="fas fa-plus"></i> Create Khatam</button>
             <div id="myKhatmsWrap" class="hidden">
               <div class="section-label mt-sm">My Previous Khatams</div>
@@ -84,7 +136,7 @@
             <input type="text" class="field" id="khatm-name" placeholder="Your name…">
             <div class="section-label">30 Paras — tap to claim yours</div>
             <div class="paras-grid" id="paras-grid"></div>
-            <button class="btn btn-ghost btn-full" onclick="resetKhatm()"><i class="fas fa-arrow-left"></i> Start New Khatm</button>
+            <button class="btn btn-ghost btn-full" onclick="resetKhatm()"><i class="fas fa-arrow-left"></i> Start New Khatam</button>
           </div>
 
         </div>
@@ -303,13 +355,149 @@ function toggleTool(name) {
 }
 
 // ══════════════════════════════════════════════
+//  PERSONAL KHATM
+// ══════════════════════════════════════════════
+var activePersonalKhatm = null;
+
+function todaySADate() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date());
+}
+
+function formatSADate(isoDate) {
+  if (!isoDate) return '';
+  var d = new Date(isoDate + 'T00:00:00');
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function generatePersonalKhatmId() {
+  return 'pk_' + Math.random().toString(36).substring(2, 8);
+}
+
+async function initPersonalKhatmPage() {
+  var pkParam = getParam('pk');
+  if (pkParam) { await loadPersonalKhatm(pkParam); }
+}
+
+async function createPersonalKhatm() {
+  var desc = el('personalKhatmDesc').value.trim();
+  if (!desc) { alert('Please enter a name for your Khatam.'); return; }
+  var btn = document.querySelector('#personal-khatm-form .btn-teal');
+  loading(btn, 'Creating…');
+  var id = generatePersonalKhatmId();
+  var paras = Array.from({length:30}, function(_,i){ return {number:i+1, completed:false, completedAt:null}; });
+  try {
+    await sbFetch('personal_khatms', { method:'POST', prefer:'return=minimal', body: JSON.stringify({id, description:desc, paras}) });
+    activePersonalKhatm = {id, description:desc, paras};
+    window.history.replaceState({}, '', '?pk='+id);
+    showPersonalKhatmView(activePersonalKhatm);
+  } catch(e) { alert('Could not create Khatam. Check your connection.'); }
+  loaded(btn);
+}
+
+async function loadPersonalKhatm(id) {
+  try {
+    var rows = await sbFetch('personal_khatms?id=eq.'+id+'&select=*');
+    if (!rows || !rows.length) { alert('Khatam not found.'); return; }
+    activePersonalKhatm = rows[0];
+    showPersonalKhatmView(activePersonalKhatm);
+  } catch(e) { alert('Could not load Khatam. Check your connection.'); }
+}
+
+function showPersonalKhatmView(khatm) {
+  hide('personal-khatm-form'); show('personal-khatm-view'); renderPersonalKhatm(khatm);
+}
+
+function renderPersonalKhatm(khatm) {
+  el('personal-khatm-view-title').textContent = khatm.description;
+  var done = khatm.paras.filter(function(p){ return p.completed; }).length;
+  var pct = Math.round((done/30)*100);
+  el('personal-khatm-progress-fill').style.width = pct + '%';
+  el('personal-khatm-progress-text').textContent = done + ' of 30 paras done';
+  el('personal-khatm-progress-pct').textContent  = pct + '%';
+  var banner = el('personal-khatm-complete-banner');
+  done === 30 ? banner.classList.remove('hidden') : banner.classList.add('hidden');
+  el('personal-paras-grid').innerHTML = khatm.paras.map(function(p) {
+    if (p.completed) return '<div class="para-tile completed" onclick="togglePersonalPara('+p.number+')">'
+      +'<span class="para-num">'+p.number+'</span>'
+      +'<span class="para-name">'+PARA_NAMES[p.number-1]+'</span>'
+      +'<span class="para-tick"><i class="fas fa-check"></i></span>'
+      +'<span class="para-who">'+formatSADate(p.completedAt)+'</span></div>';
+    return '<div class="para-tile available" onclick="togglePersonalPara('+p.number+')">'
+      +'<span class="para-num">'+p.number+'</span>'
+      +'<span class="para-name">'+PARA_NAMES[p.number-1]+'</span>'
+      +'<span class="para-hint" style="color:var(--teal-mid)">Tap to mark done</span></div>';
+  }).join('');
+}
+
+async function togglePersonalPara(num) {
+  if (!activePersonalKhatm) return;
+  var para = activePersonalKhatm.paras.find(function(p){ return p.number===num; });
+  if (!para) return;
+  var prevCompleted = para.completed, prevDate = para.completedAt;
+  if (para.completed) {
+    if (!confirm('Mark Para '+num+' as incomplete?')) return;
+    para.completed = false; para.completedAt = null;
+  } else {
+    para.completed = true; para.completedAt = todaySADate();
+  }
+  renderPersonalKhatm(activePersonalKhatm);
+  try {
+    await sbFetch('personal_khatms?id=eq.'+activePersonalKhatm.id, {
+      method:'PATCH', prefer:'return=minimal',
+      body: JSON.stringify({paras:activePersonalKhatm.paras, updated_at:new Date().toISOString()})
+    });
+  } catch(e) {
+    para.completed = prevCompleted; para.completedAt = prevDate;
+    renderPersonalKhatm(activePersonalKhatm);
+    alert('Could not save. Please check your connection.');
+  }
+}
+
+async function savePersonalKhatm() {
+  if (!activePersonalKhatm) return;
+  var btn = document.querySelector('#personal-khatm-view .btn-teal');
+  loading(btn, 'Saving…');
+  try {
+    await sbFetch('personal_khatms?id=eq.'+activePersonalKhatm.id, {
+      method:'PATCH', prefer:'return=minimal',
+      body: JSON.stringify({paras:activePersonalKhatm.paras, updated_at:new Date().toISOString()})
+    });
+    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+    setTimeout(function(){ loaded(btn); btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save'; }, 1500);
+  } catch(e) { alert('Could not save. Please check your connection.'); loaded(btn); }
+}
+
+function togglePersonalLink() {
+  if (!activePersonalKhatm) return;
+  el('personalKhatmLink').value = APP_DOMAIN + '/?pk=' + activePersonalKhatm.id;
+  el('personal-link-section').classList.toggle('hidden');
+}
+
+function copyPersonalLink() {
+  var link = el('personalKhatmLink').value;
+  navigator.clipboard.writeText(link).then(function(){
+    var btn = el('personalLinkCopyBtn');
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(function(){ btn.innerHTML = '<i class="fas fa-copy"></i> Copy Link'; }, 1800);
+  });
+}
+
+function resetPersonalKhatm() {
+  activePersonalKhatm = null;
+  window.history.replaceState({}, '', window.location.pathname);
+  show('personal-khatm-form'); hide('personal-khatm-view');
+  el('personalKhatmDesc').value = '';
+}
+
+// ══════════════════════════════════════════════
 //  KHATM
 // ══════════════════════════════════════════════
 var activeKhatm = null;
 
 async function createKhatm() {
   var desc = el('khatmDesc').value.trim();
-  if (!desc) { alert('Please enter a name for your Khatm.'); return; }
+  if (!desc) { alert('Please enter a name for your Khatam.'); return; }
   var btn = document.querySelector('#khatm-form .btn-teal');
   loading(btn, 'Creating…');
   var id = generateCode();
@@ -320,7 +508,7 @@ async function createKhatm() {
     window.history.replaceState({}, '', '?k='+id);
     showKhatmView(activeKhatm);
     saveKhatmLocal(activeKhatm);
-  } catch(e) { alert('Could not create Khatm. Check your connection.'); }
+  } catch(e) { alert('Could not create Khatam. Check your connection.'); }
   loaded(btn);
 }
 
@@ -452,12 +640,12 @@ async function loadKhatmById(id) {
   el('khatm-view-title').textContent = 'Loading…';
   try {
     var rows = await sbFetch('khatms?id=eq.'+id+'&select=*');
-    if (!rows || !rows.length) { alert('Khatm not found.'); resetKhatm(); return; }
+    if (!rows || !rows.length) { alert('Khatam not found.'); resetKhatm(); return; }
     activeKhatm = rows[0];
     window.history.replaceState({}, '', '?k='+id);
     saveKhatmLocal(activeKhatm);
     renderKhatm(activeKhatm);
-  } catch(e) { alert('Could not load Khatm. Check your connection.'); resetKhatm(); }
+  } catch(e) { alert('Could not load Khatam. Check your connection.'); resetKhatm(); }
 }
 
 // ══════════════════════════════════════════════
@@ -663,6 +851,10 @@ window.addEventListener('DOMContentLoaded', async function() {
   el('standalone-saved').textContent = (parseInt(localStorage.getItem('mqt_standalone_total') || '0')).toLocaleString();
   loadMyKhatms();
 
+  var pkParam = getParam('pk');
+  if (pkParam) { el('tool-personal-khatm').classList.add('open'); }
+  await initPersonalKhatmPage();
+
   var kParam = getParam('k'), zParam = getParam('z'), yParam = getParam('y');
 
   if (kParam) {
@@ -672,7 +864,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     try {
       var rows = await sbFetch('khatms?id=eq.'+kParam+'&select=*');
       if (rows && rows.length) { activeKhatm = rows[0]; saveKhatmLocal(activeKhatm); renderKhatm(activeKhatm); }
-      else el('khatm-view-title').textContent = 'Khatm not found.';
+      else el('khatm-view-title').textContent = 'Khatam not found.';
     } catch(e) { el('khatm-view-title').textContent = 'Could not load. Check your connection.'; }
 
   } else if (zParam) {
