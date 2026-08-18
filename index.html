@@ -317,10 +317,18 @@ async function sbFetch(path, opts) {
   if (!res.ok) { var e = await res.text(); throw new Error(e); }
   var t = await res.text(); return t ? JSON.parse(t) : null;
 }
+function sbRpc(name, params) {
+  return sbFetch('rpc/' + name, { method: 'POST', body: JSON.stringify(params) });
+}
 
 // ── UTILS ─────────────────────────────────────
 function getParam(n) { return new URLSearchParams(window.location.search).get(n); }
 function generateCode() { return Math.random().toString(36).substring(2,7).toUpperCase(); }
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+  });
+}
 
 function getSATimestamp() {
   var d = new Intl.DateTimeFormat('en-ZA', {
@@ -400,7 +408,7 @@ async function createPersonalKhatm() {
 
 async function loadPersonalKhatm(id) {
   try {
-    var rows = await sbFetch('personal_khatms?id=eq.'+id+'&select=*');
+    var rows = await sbRpc('get_personal_khatm', {p_id:id});
     if (!rows || !rows.length) { alert('Khatam not found.'); return; }
     activePersonalKhatm = rows[0];
     showPersonalKhatmView(activePersonalKhatm);
@@ -446,10 +454,7 @@ async function togglePersonalPara(num) {
   }
   renderPersonalKhatm(activePersonalKhatm);
   try {
-    await sbFetch('personal_khatms?id=eq.'+activePersonalKhatm.id, {
-      method:'PATCH', prefer:'return=minimal',
-      body: JSON.stringify({paras:activePersonalKhatm.paras, updated_at:new Date().toISOString()})
-    });
+    await sbRpc('update_personal_khatm', {p_id:activePersonalKhatm.id, p_paras:activePersonalKhatm.paras});
   } catch(e) {
     para.completed = prevCompleted; para.completedAt = prevDate;
     renderPersonalKhatm(activePersonalKhatm);
@@ -462,10 +467,7 @@ async function savePersonalKhatm() {
   var btn = document.querySelector('#personal-khatm-view .btn-teal');
   loading(btn, 'Saving…');
   try {
-    await sbFetch('personal_khatms?id=eq.'+activePersonalKhatm.id, {
-      method:'PATCH', prefer:'return=minimal',
-      body: JSON.stringify({paras:activePersonalKhatm.paras, updated_at:new Date().toISOString()})
-    });
+    await sbRpc('update_personal_khatm', {p_id:activePersonalKhatm.id, p_paras:activePersonalKhatm.paras});
     btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
     setTimeout(function(){ loaded(btn); btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save'; }, 1500);
   } catch(e) { alert('Could not save. Please check your connection.'); loaded(btn); }
@@ -541,11 +543,11 @@ function renderKhatm(khatm) {
       +'<span class="para-num">'+p.number+'</span>'
       +'<span class="para-name">'+PARA_NAMES[p.number-1]+'</span>'
       +'<span class="para-tick"><i class="fas fa-check"></i></span>'
-      +'<span class="para-who">'+p.assignedTo+'</span></div>';
+      +'<span class="para-who">'+escapeHtml(p.assignedTo)+'</span></div>';
     if (p.assignedTo) return '<div class="para-tile assigned" onclick="markParaDone('+p.number+')">'
       +'<span class="para-num">'+p.number+'</span>'
       +'<span class="para-name">'+PARA_NAMES[p.number-1]+'</span>'
-      +'<span class="para-who">'+p.assignedTo+'</span>'
+      +'<span class="para-who">'+escapeHtml(p.assignedTo)+'</span>'
       +'<span class="para-hint" style="color:var(--gold-dark)">Tap → done</span></div>';
     return '<div class="para-tile available" onclick="claimPara('+p.number+')">'
       +'<span class="para-num">'+p.number+'</span>'
@@ -563,7 +565,7 @@ async function claimPara(num) {
   para.assignedTo = name;
   renderKhatm(activeKhatm);
   try {
-    await sbFetch('khatms?id=eq.'+activeKhatm.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({paras:activeKhatm.paras}) });
+    await sbRpc('update_khatm', {p_id:activeKhatm.id, p_paras:activeKhatm.paras});
     saveKhatmLocal(activeKhatm);
   } catch(e) { para.assignedTo = ''; renderKhatm(activeKhatm); alert('Could not claim para. Please try again.'); }
 }
@@ -576,7 +578,7 @@ async function markParaDone(num) {
   para.completed = true;
   renderKhatm(activeKhatm);
   try {
-    await sbFetch('khatms?id=eq.'+activeKhatm.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({paras:activeKhatm.paras}) });
+    await sbRpc('update_khatm', {p_id:activeKhatm.id, p_paras:activeKhatm.paras});
     saveKhatmLocal(activeKhatm);
   } catch(e) { para.completed = false; renderKhatm(activeKhatm); alert('Could not mark as done. Please try again.'); }
 }
@@ -586,7 +588,7 @@ async function saveKhatmToSupabase() {
   var btn = document.querySelector('#khatm-view .btn-teal');
   loading(btn, 'Saving…');
   try {
-    await sbFetch('khatms?id=eq.'+activeKhatm.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({paras:activeKhatm.paras}) });
+    await sbRpc('update_khatm', {p_id:activeKhatm.id, p_paras:activeKhatm.paras});
     saveKhatmLocal(activeKhatm);
     btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
     setTimeout(function(){ loaded(btn); btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save'; }, 1800);
@@ -629,7 +631,7 @@ function loadMyKhatms() {
     var pct  = Math.round((done/30)*100);
     return '<div class="khatm-row" onclick="loadKhatmById(\''+k.id+'\')">'
       +'<div class="khatm-row-icon"><i class="fas fa-book-quran"></i></div>'
-      +'<div style="flex:1"><div class="khatm-row-name">'+k.description+'</div>'
+      +'<div style="flex:1"><div class="khatm-row-name">'+escapeHtml(k.description)+'</div>'
       +'<div class="khatm-row-meta">'+done+'/30 paras done</div>'
       +'<div class="progress-wrap"><div class="progress-fill" style="width:'+pct+'%"></div></div></div>'
       +'<div class="khatm-row-pct">'+pct+'%</div></div>';
@@ -642,7 +644,7 @@ async function loadKhatmById(id) {
   hide('khatm-form'); show('khatm-view');
   el('khatm-view-title').textContent = 'Loading…';
   try {
-    var rows = await sbFetch('khatms?id=eq.'+id+'&select=*');
+    var rows = await sbRpc('get_khatm', {p_id:id});
     if (!rows || !rows.length) { alert('Khatam not found.'); resetKhatm(); return; }
     activeKhatm = rows[0];
     window.history.replaceState({}, '', '?k='+id);
@@ -722,7 +724,7 @@ function renderZikr(z) {
   el('zikr-contributions').innerHTML = z.contributions.length === 0
     ? '<div class="empty-state">No contributions yet — be the first!</div>'
     : z.contributions.map(function(c){
-        return '<div class="contrib-item"><span class="contrib-name">'+c.name+'</span><span class="contrib-count">'+c.count.toLocaleString()+'</span></div>';
+        return '<div class="contrib-item"><span class="contrib-name">'+escapeHtml(c.name)+'</span><span class="contrib-count">'+c.count.toLocaleString()+'</span></div>';
       }).join('');
 }
 
@@ -747,7 +749,7 @@ async function saveZikrSession() {
   el('zikr-session-count').textContent = '0';
   renderZikr(currentZikr);
   try {
-    await sbFetch('zikr_counters?id=eq.'+currentZikr.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({total:currentZikr.total, contributions:currentZikr.contributions}) });
+    await sbRpc('update_zikr_counter', {p_id:currentZikr.id, p_total:currentZikr.total, p_contributions:currentZikr.contributions});
   } catch(e) {
     currentZikr.total -= saved;
     if (ex) ex.count -= saved; else currentZikr.contributions.pop();
@@ -803,7 +805,7 @@ function renderYaaseen(y) {
   el('yaaseen-contributions').innerHTML = y.contributions.length === 0
     ? '<div class="empty-state">No contributions yet — be the first!</div>'
     : y.contributions.map(function(c){
-        return '<div class="contrib-item"><span class="contrib-name">'+c.name+'</span><span class="contrib-count">'+c.count+'</span></div>';
+        return '<div class="contrib-item"><span class="contrib-name">'+escapeHtml(c.name)+'</span><span class="contrib-count">'+c.count+'</span></div>';
       }).join('');
 }
 
@@ -828,7 +830,7 @@ async function saveYaaseenSession() {
   el('yaaseen-session').textContent = '0';
   renderYaaseen(currentYaaseen);
   try {
-    await sbFetch('yaaseen_counters?id=eq.'+currentYaaseen.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({total:currentYaaseen.total, contributions:currentYaaseen.contributions}) });
+    await sbRpc('update_yaaseen_counter', {p_id:currentYaaseen.id, p_total:currentYaaseen.total, p_contributions:currentYaaseen.contributions});
   } catch(e) {
     currentYaaseen.total -= saved;
     if (ex) ex.count -= saved; else currentYaaseen.contributions.pop();
@@ -865,7 +867,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     hide('khatm-form'); show('khatm-view');
     el('khatm-view-title').textContent = 'Loading…';
     try {
-      var rows = await sbFetch('khatms?id=eq.'+kParam+'&select=*');
+      var rows = await sbRpc('get_khatm', {p_id:kParam});
       if (rows && rows.length) { activeKhatm = rows[0]; saveKhatmLocal(activeKhatm); renderKhatm(activeKhatm); }
       else el('khatm-view-title').textContent = 'Khatam not found.';
     } catch(e) { el('khatm-view-title').textContent = 'Could not load. Check your connection.'; }
@@ -875,7 +877,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     hide('zikr-form'); show('zikr-view');
     el('zikr-view-title').textContent = 'Loading…';
     try {
-      var zRows = await sbFetch('zikr_counters?id=eq.'+zParam+'&select=*');
+      var zRows = await sbRpc('get_zikr_counter', {p_id:zParam});
       if (zRows && zRows.length) { currentZikr = zRows[0]; renderZikr(currentZikr); }
       else el('zikr-view-title').textContent = 'Counter not found.';
     } catch(e) { el('zikr-view-title').textContent = 'Could not load. Check your connection.'; }
@@ -885,7 +887,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     hide('yaaseen-form'); show('yaaseen-view');
     el('yaaseen-view-title').textContent = 'Loading…';
     try {
-      var yRows = await sbFetch('yaaseen_counters?id=eq.'+yParam+'&select=*');
+      var yRows = await sbRpc('get_yaaseen_counter', {p_id:yParam});
       if (yRows && yRows.length) { currentYaaseen = yRows[0]; renderYaaseen(currentYaaseen); }
       else el('yaaseen-view-title').textContent = 'Counter not found.';
     } catch(e) { el('yaaseen-view-title').textContent = 'Could not load. Check your connection.'; }
